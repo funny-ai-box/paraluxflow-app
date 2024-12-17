@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>735932095514-2vl64k4iba1ef79rgktb70fnarnr6ca6.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.735932095514-2vl64k4iba1ef79rgktb70fnarnr6ca6</string>
+	<key>API_KEY</key>
+	<string>AIzaSyACpd2AvoFU-2yOVGZCM2Kkh3NgrJpBTkQ</string>
+	<key>GCM_SENDER_ID</key>
+	<string>735932095514</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.futurelabs.lazyreader</string>
+	<key>PROJECT_ID</key>
+	<string>lazy-reader-ai</string>
+	<key>STORAGE_BUCKET</key>
+	<string>lazy-reader-ai.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:735932095514:ios:8835599b071e445888c5a3</string>
+</dict>
+</plist>

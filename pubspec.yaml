@@ -1,0 +1,141 @@
+name: lazyreader
+description: "A new Flutter project."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+# environment:
+#   sdk: '>=2.17.0 <4.0.0'
+#   flutter: ">=3.7.0"
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  flutter:
+    sdk: flutter
+
+  modal_bottom_sheet: ^3.0.0-pre
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.2
+  http: ^1.1.2
+  draggable_home: ^1.0.5
+  flutter_screenutil: ^5.9.0
+  curved_navigation_bar: ^1.0.3
+  meta: ^1.2.4
+  swipeable_card_stack: ^0.0.5
+  flutter_card_swiper: ^6.1.0
+  flutter_swiper_view: ^1.1.8
+
+  html: ^0.15.4
+  logging: ^1.2.0
+  path_provider: ^2.1.2
+  photo_view: ^0.14.0
+  provider: ^6.1.1
+  url_launcher: ^6.2.4
+  flutter_zoom_drawer: ^3.1.1
+  flutter_riverpod: ^2.4.9
+  easy_refresh: ^3.3.4
+  font_awesome_flutter: ^10.7.0
+  quiver: ^3.2.1
+  sign_in_button: ^3.2.0
+  intl: ^0.19.0
+  shared_preferences: ^2.0.15
+  firebase_dynamic_links: 6.0.8
+  firebase_auth: ^5.3.1
+  email_validator: ^2.1.17
+  fluttertoast: ^8.2.4
+  cookie_jar: ^4.0.8
+  google_sign_in: ^6.2.1
+  sign_in_with_apple: 6.1.3
+  event_bus: ^2.0.0
+  flutter_switch: ^0.3.2
+  flex_color_scheme: ^7.3.1
+  flutter_floating: ^1.0.7
+  rxdart: ^0.27.0
+  shimmer: ^3.0.0
+  flutter_svg: ^2.0.10+1
+  flutter_easyloading: ^3.0.5
+  google_generative_ai: ^0.2.3
+  google_fonts: ^6.2.0
+  flutter_swiper_null_safety: ^1.0.2
+  card_swiper: ^2.0.4
+  flutter_slidable: ^3.1.1
+  package_info_plus: ^8.1.0
+  cached_network_image: ^3.4.1
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+
+
+flutter:
+
+
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - images/
+    - assets/
+    - images/logo.png
+    - assets/images/default_rss_icon.svg
+    - assets/images/empty_rss_sources.svg
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/assets-and-images/#resolution-aware
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/assets-and-images/#from-packages
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto/Roboto-Bold.ttf
+          weight: 500
+    - family: Kode
+      fonts:
+        - asset: assets/fonts/Kode/KodeMono-Medium.ttf
+          weight: 500
+    - family: BrasiliaDelight
+      fonts:
+        - asset: assets/fonts/Brasilia/BrasiliaDelight-Regular.ttf
+          weight: 500
+    - family: Pamega
+      fonts:
+        - asset: assets/fonts/Pamega/Pamega.ttf
+          weight: 500
+
+  
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/custom-fonts/#from-packages

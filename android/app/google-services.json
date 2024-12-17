@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "735932095514",
+    "project_id": "lazy-reader-ai",
+    "storage_bucket": "lazy-reader-ai.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:735932095514:android:b10890c513d91ac888c5a3",
+        "android_client_info": {
+          "package_name": "com.futurelabs.lazyreader"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "735932095514-mga8ijo6e134q2lm0tgl1ea54ofpf8fg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.futurelabs.lazyreader",
+            "certificate_hash": "c1f46e6b59a941dede5c3c909d348e9fb7d0d2b7"
+          }
+        },
+        {
+          "client_id": "735932095514-cjv3udbsloo4tf8pherq4g6td53li382.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlO_tg3_nf6YtWNoMot-ROh5ptNzTOIYs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "735932095514-cjv3udbsloo4tf8pherq4g6td53li382.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "735932095514-2vl64k4iba1ef79rgktb70fnarnr6ca6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.futurelabs.lazyreader",
+                "app_store_id": "6478212623"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
