@@ -62,12 +62,20 @@ class CustomUser {
 
   // 从本地存储获取 CustomUser
   static Future<CustomUser?> getFromLocalStorage() async {
-    String? userJson = LocalStorageUtil.getString('customUser'); // 读取 JSON 字符串
-    if (userJson != null) {
-      return CustomUser.fromJson(
-          jsonDecode(userJson)); // 将 JSON 字符串转换回 CustomUser 对象
+    String? userJson = LocalStorageUtil.getString('customUser');
+    if (userJson == null) {
+      return null; // 如果没有存储的用户数据，返回 null
     }
-    return null; // 如果没有数据，返回 null
+
+    try {
+      Map<String, dynamic> jsonMap = jsonDecode(userJson);
+      return CustomUser.fromJson(jsonMap);
+    } catch (e) {
+      print('Error parsing user data: $e');
+      // 如果解析失败，删除可能损坏的数据
+      await removeFromLocalStorage();
+      return null;
+    }
   }
 
   static Future<void> removeFromLocalStorage() async {

@@ -43,7 +43,7 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
                       // 根据选中状态显示对勾
                       trailing: selectedItems.contains(item['id'])
                           ? Icon(Icons.check_box)
-                          :  Icon(Icons.check_box_outline_blank),
+                          : Icon(Icons.check_box_outline_blank),
                     );
                   }).toList(),
                 ),
@@ -51,7 +51,7 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
             ),
             Column(
               children: [
-                if(selectedItems.isEmpty) 
+                if (selectedItems.isEmpty)
                   Text('You need to select at least one'),
                 SizedBox(
                   height: 60,
@@ -60,10 +60,9 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
                     padding: const EdgeInsets.all(8.0),
                     child: ElevatedButton(
                       style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all<Color>(
+                        backgroundColor: WidgetStateProperty.all<Color>(
                           Theme.of(context).colorScheme.primary, // 使用主题中的主要颜色
                         ),
-                        
                       ),
                       onPressed: () {
                         if (selectedItems.isNotEmpty) {
@@ -75,7 +74,9 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
                         'ok',
                         style: TextStyle(
                           fontSize: 20.0,
-                          color: Theme.of(context).colorScheme.secondaryContainer, // 使用主题中的文本颜色
+                          color: Theme.of(context)
+                              .colorScheme
+                              .secondaryContainer, // 使用主题中的文本颜色
                         ),
                       ),
                     ),

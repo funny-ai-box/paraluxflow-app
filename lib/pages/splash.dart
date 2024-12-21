@@ -1,17 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:lazyreader/models/CustomUser.dart';
 import 'package:lazyreader/pages/home_screen.dart';
-import 'package:lazyreader/pages/articles/list.dart';
-import 'package:lazyreader/pages/articles/details.dart';
 
 import 'package:lazyreader/pages/user/login.dart';
 import 'package:lazyreader/service/auth_service.dart';
 import 'package:lazyreader/service/user_service.dart';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 
 import 'package:flutter/material.dart';

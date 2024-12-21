@@ -10,7 +10,7 @@ import 'package:path_provider/path_provider.dart';
 
 class HttpUtil {
   //static const String _baseUrl = 'https://jdai.ezretailpro.com';
-  static const String _baseUrl = 'http://127.0.0.1:8002';
+  static const String _baseUrl = 'http://192.168.31.102:8002';
   static late PersistCookieJar _cookieJar;
 
   // 初始化CookieJar

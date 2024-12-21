@@ -29,7 +29,6 @@ class CurvedNavigationBar extends StatefulWidget {
     this.animationDuration = const Duration(milliseconds: 600),
     this.height = 75.0,
   })  : letIndexChange = letIndexChange ?? ((_) => true),
-        assert(items != null),
         assert(items.length >= 1),
         assert(0 <= index && index < items.length),
         assert(0 <= height && height <= 75.0),
@@ -128,14 +127,11 @@ class CurvedNavigationBarState extends State<CurvedNavigationBar>
                     color: widget.buttonBackgroundColor ?? widget.color,
                     type: MaterialType.circle,
                     child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      // child: _icon,
-                      child: Icon(
-                        (_icon as Icon).icon,
-                        // Icons.abc,
-                        color: Colors.white
-                      )
-                    ),
+                        padding: const EdgeInsets.all(8.0),
+                        // child: _icon,
+                        child: Icon((_icon as Icon).icon,
+                            // Icons.abc,
+                            color: Colors.white)),
                   ),
                 ),
               ),
@@ -159,20 +155,19 @@ class CurvedNavigationBarState extends State<CurvedNavigationBar>
               child: SizedBox(
                   height: 100.0,
                   child: Row(
-                    children: widget.items.map((item) {
-                      return NavButton(
-                        onTap: _buttonTap,
-                        position: _pos,
-                        length: _length,
-                        index: widget.items.indexOf(item),
-                        // item是一个icon, 修改他颜色为白色
-                        child: Center(child: Icon(
-                          (item as Icon).icon,
-                          color: Colors.white
-                        )),
-                        // child: Center(child: item),
-                      );
-                    }).toList())),
+                      children: widget.items.map((item) {
+                    return NavButton(
+                      onTap: _buttonTap,
+                      position: _pos,
+                      length: _length,
+                      index: widget.items.indexOf(item),
+                      // item是一个icon, 修改他颜色为白色
+                      child: Center(
+                          child:
+                              Icon((item as Icon).icon, color: Colors.white)),
+                      // child: Center(child: item),
+                    );
+                  }).toList())),
             ),
           ],
         ),
