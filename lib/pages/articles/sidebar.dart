@@ -33,7 +33,7 @@ class _FeedDrawerState extends State<FeedDrawer> {
   Future<void> initData() async {
     RssService rssService = RssService();
     try {
-      var result = await rssService.getUserSubScribedUnRead();
+      var result = await rssService.getRssSourcesByCategory(0);
       List<Map<String, dynamic>> data =
           List<Map<String, dynamic>>.from(result['data']);
 

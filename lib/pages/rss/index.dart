@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lazyreader/pages/rss/rss_category_list.dart';
 import 'package:lazyreader/pages/rss/rss_source_list.dart';
 import 'package:lazyreader/service/rss_service.dart';
 
@@ -10,17 +9,15 @@ class RSS extends StatefulWidget {
 
 class _RssPageState extends State<RSS> {
   List<Map<String, dynamic>> categoryList = [];
-  List<Map<String, dynamic>> specialSourcesList = [];
+  final RssService rssService = RssService();
 
   @override
   void initState() {
     super.initState();
-    getRssCategory();
-    getSpecialSources();
+    _fetchCategories();
   }
 
-  void getRssCategory() async {
-    RssService rssService = RssService();
+  Future<void> _fetchCategories() async {
     try {
       var result = await rssService.getRssCategory();
       setState(() {
@@ -28,162 +25,138 @@ class _RssPageState extends State<RSS> {
       });
     } catch (e) {
       print('Error fetching categories: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('获取分类失败: $e')),
+        );
+      }
     }
   }
 
-  void getSpecialSources() {
-    // This would typically be an API call. For now, we'll use mock data.
-    setState(() {
-      specialSourcesList = [
-        {"name": "Google News", "icon": Icons.article},
-      ];
-    });
+  IconData getCategoryIcon(String categoryName) {
+    final Map<String, IconData> iconMap = {
+      'World': Icons.public,
+      'Politics': Icons.policy,
+      'Business': Icons.business,
+      'Technology': Icons.computer,
+      'Health': Icons.health_and_safety,
+      'Science & Environment': Icons.science,
+      'Entertainment & Arts': Icons.theater_comedy,
+      'Sports': Icons.sports_soccer,
+      'Gaming': Icons.games,
+      'Travel': Icons.flight_takeoff
+    };
+    return iconMap[categoryName] ?? Icons.rss_feed;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: _buildSearchBar(),
-        backgroundColor: Colors.white,
         elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '重点订阅源精选',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => RssCategoryList()),
-                      );
-                    },
-                    child: Text('查看更多'),
-                  ),
-                ],
-              ),
-            ),
-            _buildCategoryGrid(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                '特殊订阅源',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            _buildSpecialSourcesGrid(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Container(
-      width: double.infinity,
-      height: 36, // Smaller height
-      child: Center(
-        child: TextField(
-          decoration: InputDecoration(
-            hintText: '搜索网站和订阅源',
-            hintStyle: TextStyle(fontSize: 14), // Smaller font size
-            prefixIcon: Icon(Icons.search, size: 20), // Smaller icon
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30), // More rounded
-              borderSide: BorderSide.none,
-            ),
-            filled: true,
-            fillColor: Colors.grey[200],
-            contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+        backgroundColor: Colors.white,
+        title: Text('RSS Categories',
+            style: TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+            )),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.search, color: Colors.black87),
+            onPressed: () {},
           ),
-        ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildCategoryGrid() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: 16),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 1.5,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
+      backgroundColor: Colors.grey[50],
+      body: RefreshIndicator(
+        onRefresh: _fetchCategories,
+        child: categoryList.isEmpty
+            ? Center(child: CircularProgressIndicator())
+            : ListView.builder(
+                padding: EdgeInsets.all(12),
+                itemCount: (categoryList.length / 2).ceil(),
+                itemBuilder: (context, index) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: _buildCategoryTile(categoryList[index * 2]),
+                      ),
+                      SizedBox(width: 12),
+                      if (index * 2 + 1 < categoryList.length)
+                        Expanded(
+                          child:
+                              _buildCategoryTile(categoryList[index * 2 + 1]),
+                        ),
+                      if (index * 2 + 1 >= categoryList.length) Spacer(),
+                    ],
+                  );
+                },
+              ),
       ),
-      itemCount: categoryList.length > 6 ? 6 : categoryList.length,
-      itemBuilder: (context, index) {
-        return _buildCategoryTile(categoryList[index]);
-      },
     );
   }
 
   Widget _buildCategoryTile(Map<String, dynamic> category) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => RssSourceList(
-              categoryId: category['id'].toString(),
-              categoryName: category['text'],
+    final IconData categoryIcon = getCategoryIcon(category['name']);
+    final Color iconColor = Theme.of(context).primaryColor;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Card(
+        elevation: 1,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RssSourceList(
+                  categoryId: category['id'].toString(),
+                  categoryName: category['name'],
+                ),
+              ),
+            );
+          },
+          child: Container(
+            height: 80, // 固定高度
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    categoryIcon,
+                    size: 20,
+                    color: iconColor,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    category['name'],
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: Colors.primaries[category['id'] % Colors.primaries.length],
-        ),
-        child: Center(
-          child: Text(
-            category['text'],
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
         ),
       ),
-    );
-  }
-
-  Widget _buildSpecialSourcesGrid() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: 16),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 1,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemCount: specialSourcesList.length,
-      itemBuilder: (context, index) {
-        return _buildSpecialSourceTile(specialSourcesList[index]);
-      },
-    );
-  }
-
-  Widget _buildSpecialSourceTile(Map<String, dynamic> source) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(source['icon'], size: 40),
-        SizedBox(height: 8),
-        Text(source['name'], textAlign: TextAlign.center),
-      ],
     );
   }
 }
