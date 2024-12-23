@@ -85,6 +85,9 @@ dependencies:
   package_info_plus: ^8.1.0
   cached_network_image: ^3.4.1
   timeago: ^3.7.0
+  flutter_html: ^3.0.0-alpha.6
+
+
 
 
 dev_dependencies:
@@ -118,25 +121,4 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  fonts:
-    - family: Roboto
-      fonts:
-        - asset: assets/fonts/Roboto/Roboto-Bold.ttf
-          weight: 500
-    - family: Kode
-      fonts:
-        - asset: assets/fonts/Kode/KodeMono-Medium.ttf
-          weight: 500
-    - family: BrasiliaDelight
-      fonts:
-        - asset: assets/fonts/Brasilia/BrasiliaDelight-Regular.ttf
-          weight: 500
-    - family: Pamega
-      fonts:
-        - asset: assets/fonts/Pamega/Pamega.ttf
-          weight: 500
 
-  
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/custom-fonts/#from-packages

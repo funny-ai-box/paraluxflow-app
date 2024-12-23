@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import 'package:intl/intl.dart';
+import 'package:lazyreader/components/CustomHtmlViewer.dart';
 
 import 'package:lazyreader/utils/http_util.dart';
 
@@ -24,30 +25,7 @@ class _NewsDetailsState extends State<NewsDetails> {
   bool isGeneratingSummary = false;
 
   bool showSummaryBubble = false;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchData();
-  }
-
-  fetchData() async {
-    NewsService newsService = NewsService();
-    Map<String, dynamic> queryParams = {
-      'article_id': widget.detailId,
-    };
-    try {
-      var result = await newsService.getDetailsInfo(queryParams);
-
-      print('details====${result['data']}');
-      // rss的文章简介
-      setState(() {
-        detailsInfo = result['data'];
-      });
-    } catch (e) {
-      print('111111222222: ${e}');
-    }
-  }
+  bool isLoading = true; // Add loading state
 
   String formatDate(String date) {
     try {
@@ -60,96 +38,316 @@ class _NewsDetailsState extends State<NewsDetails> {
   }
 
   @override
-  void dispose() {
-    summaryStreamController.close();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    bool isDataLoaded = detailsInfo.isNotEmpty;
     return Scaffold(
-        appBar: AppBar(
-          elevation: 0,
-          actions: <Widget>[
-            IconButton(
-              icon: Icon(Icons.bookmark_add_outlined),
-              onPressed: () {
-                // Implement your favorite/bookmark functionality here
-                print('Favorite button tapped');
-              },
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        iconTheme: IconThemeData(color: Theme.of(context).primaryColor),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(
+              Icons.bookmark_add_outlined,
+              color: Theme.of(context).primaryColor,
             ),
-          ],
-        ),
-        body: SafeArea(
-          child: isDataLoaded
-              ? Stack(
+            onPressed: () {
+              print('Favorite button tapped');
+            },
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: isLoading
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    detailsInfo['content_id'] != null
-                        ? SingleChildScrollView(
-                            child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  detailsInfo['title'],
-                                  style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 8),
-                                if (detailsInfo['published_date'] != null)
-                                  Text(
-                                    '${detailsInfo['feed_title']} / ${formatDate(detailsInfo['published_date'])}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                const SizedBox(height: 20),
-                              ],
-                            ),
-                          ))
-                        : Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                    if (showSummaryBubble)
-                      Positioned(
-                        left: 20,
-                        right: 20,
-                        bottom: 60,
-                        child: SummaryBubble(),
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).primaryColor),
+                    ),
+                    SizedBox(height: 8.0),
+                    Text(
+                      'Loading article...',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 16,
                       ),
+                    ),
                   ],
-                )
-              : Center(
-                  child: CircularProgressIndicator(),
                 ),
-        ),
-        floatingActionButton: showSummaryBubble
-            ? null
-            : FloatingActionButton(
-                onPressed: () async {
-                  if (showSummaryBubble) {
-                    setState(() {
-                      showSummaryBubble = false;
-                    });
-                  } else {
-                    generateSummary();
+              )
+            : Stack(
+                children: [
+                  SingleChildScrollView(
+                    physics: BouncingScrollPhysics(),
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                          left: 24,
+                          right: 24,
+                          top: 16,
+                          bottom: MediaQuery.of(context).padding.bottom + 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title section with enhanced typography
+                          Text(
+                            detailsInfo['title'] ?? '',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              height: 1.4,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          SizedBox(height: 16),
+
+                          // Source and date with better visual hierarchy
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.source_outlined,
+                                size: 16,
+                                color: Colors.grey[600],
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                detailsInfo['feed_title'] ?? '',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(width: 16),
+                              Icon(
+                                Icons.access_time,
+                                size: 16,
+                                color: Colors.grey[600],
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                formatDate(detailsInfo['published_date'] ?? ''),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: 24),
+
+                          // Article content with improved readability
+                          if (detailsInfo['html_content'] != null)
+                            CustomHtmlViewer(
+                              htmlContent: detailsInfo['html_content'],
+                              onLinkTap: (url, context, attributes) {
+                                if (url != null) {
+                                  // 处理链接点击
+                                  print('Link tapped: $url');
+                                }
+                              },
+                            ),
+
+                          // Add bottom padding for floating button
+                          SizedBox(height: 80),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (showSummaryBubble)
+                    Positioned(
+                      left: 20,
+                      right: 20,
+                      bottom: 60,
+                      child: SummaryBubble(),
+                    ),
+                ],
+              ),
+      ),
+      floatingActionButton: showSummaryBubble
+          ? null
+          : Container(
+              margin: EdgeInsets.only(bottom: 16),
+              child: FloatingActionButton.extended(
+                onPressed: () {
+                  if (!isGeneratingSummary) {
                     setState(() {
                       showSummaryBubble = true;
                     });
+                    generateSummary();
                   }
                 },
+                icon: Icon(Icons.assistant),
+                label: Text('Generate Summary'),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
-                foregroundColor: Colors.white,
-                backgroundColor: Theme.of(context).primaryColor,
-                child: Icon(Icons.assistant),
-              ));
+              ),
+            ),
+    );
+  }
+
+  Widget SummaryBubble() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                spreadRadius: 1,
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: StreamBuilder<String>(
+                  stream: summaryStreamController.stream,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.auto_awesome,
+                                color: Colors.yellow,
+                                size: 20,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'AI Summary',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            snapshot.data ?? "",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                              height: 1.6,
+                            ),
+                          ),
+                        ],
+                      );
+                    } else {
+                      return Container(
+                        height: 120,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'Generating summary...',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          top: -16,
+          right: -16,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  showSummaryBubble = false;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      spreadRadius: 1,
+                      blurRadius: 3,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.close,
+                  size: 20,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  fetchData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    NewsService newsService = NewsService();
+    Map<String, dynamic> queryParams = {
+      'article_id': widget.detailId,
+    };
+
+    try {
+      var result = await newsService.getDetailsInfo(queryParams);
+      print(result['data']);
+      setState(() {
+        detailsInfo = result['data'];
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+      setState(() {
+        isLoading = false;
+      });
+      // Show error message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load article')),
+      );
+    }
   }
 
   void generateSummary() async {
@@ -194,89 +392,5 @@ class _NewsDetailsState extends State<NewsDetails> {
       print('Error connecting to SSE: $e');
       isGeneratingSummary = false;
     }
-  }
-
-  Widget SummaryBubble() {
-    return Stack(
-      clipBehavior: Clip.none, // Allow overflow
-      children: [
-        Container(
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.8),
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.5),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(children: [
-              Container(
-                  child: SingleChildScrollView(
-                      child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              StreamBuilder<String>(
-                                stream: summaryStreamController.stream,
-                                builder: (context, snapshot) {
-                                  if (snapshot.hasData) {
-                                    return SingleChildScrollView(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(10),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              snapshot.data ?? "",
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                color: Colors
-                                                    .white, // 由于背景是黑色，需要将文本颜色改为白色
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  } else {
-                                    return Center(
-                                        child: CircularProgressIndicator());
-                                  }
-                                },
-                              ),
-                            ],
-                          ))))
-            ])),
-        Positioned(
-          top: -10, // 根据需要调整这些值
-          left: -10,
-          child: GestureDetector(
-            onTap: () {
-              setState(() {
-                showSummaryBubble = false;
-              });
-            },
-            child: Container(
-              padding: EdgeInsets.all(6), // 设置为0，或根据需要调整
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor, // 红色背景
-                shape: BoxShape.circle, // 圆形
-              ),
-              child: Icon(
-                Icons.close,
-                size: 16, // 减小图标尺寸
-                color: Colors.white,
-              ),
-            ),
-          ),
-        )
-      ],
-    );
   }
 }

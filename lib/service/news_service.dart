@@ -16,7 +16,7 @@ class NewsService {
   }
 
   Future<dynamic> getDetailsInfo(parameters) async {
-    const path = 'v1/rss/article_detail'; // rss列表
+    const path = 'feed/article_detail'; // rss列表
     // final parameters = {};
     try {
       final response =

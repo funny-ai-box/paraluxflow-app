@@ -9,7 +9,6 @@ import 'package:lazyreader/pages/user/login.dart';
 import 'package:lazyreader/utils/event_bus_util.dart';
 import 'package:lazyreader/utils/http_util.dart';
 import 'package:lazyreader/utils/local_storage_util.dart';
-import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:google_fonts/google_fonts.dart';
 import './routes.dart';
@@ -23,7 +22,6 @@ void main() async {
   configLoading();
 }
 
-// 创建一个 GlobalKey 用于导航
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class MyApp extends StatefulWidget {
@@ -38,7 +36,6 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    // 监听未登录事件
     eventBus.on<UserUnauthorizedEvent>().listen((event) {
       print("检测到登录失效事件");
       Fluttertoast.showToast(msg: "登录失效，请重新登录");
@@ -49,81 +46,169 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      systemNavigationBarColor: Colors.red, // 设置导航栏颜色
+    // 设置系统UI样式
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ));
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: FlexThemeData.light(
-        surface: Colors.white, // Ensure surfaces are white
-        background: Colors.white, // Explicit background color
-        colors: const FlexSchemeColor(
-          primary: Color(0xff00a99d),
-          primaryContainer: Color(0xffa5d6a7),
-          secondary: Color(0xff00695c),
-          tertiary: Color(0xff004d40),
-          tertiaryContainer: Color(0xff59b1a1),
-          error: Color(0xffb00020),
-        ),
-        dialogBackground: Colors.white,
-        textTheme: GoogleFonts.notoSansAdlamTextTheme(
-          Theme.of(context).textTheme,
-        ),
-        usedColors: 1,
-        blendLevel: 7,
-        appBarElevation: 5.5,
-        subThemesData: const FlexSubThemesData(
-          blendOnLevel: 10,
-          blendOnColors: false,
-          blendTextTheme: true,
-          useTextTheme: true,
-          useM2StyleDividerInM3: true,
-        ),
-        useMaterial3ErrorColors: true,
-        visualDensity: FlexColorScheme.comfortablePlatformDensity,
+      theme: ThemeData(
         useMaterial3: true,
-        swapLegacyOnMaterial3: true,
-      ),
-      darkTheme: FlexThemeData.dark(
-        surface: Colors.black, // 设置背景颜色为黑色
-        background: Colors.black, // 显式背景颜色为黑色
-        colors: const FlexSchemeColor(
-          primary: Color(0xff80cbc4),
-          primaryContainer: Color(0xff004d40),
-          secondary: Color(0xff80cbc4),
-          secondaryContainer: Color(0xff00695c),
-          tertiary: Color(0xff4db6ac),
-          tertiaryContainer: Color(0xff05514a),
-          appBarColor: Color(0xff004d40),
-          error: Color(0xffcf6679),
+        brightness: Brightness.light,
+
+        // 颜色方案
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF00A99D),
+          brightness: Brightness.light,
         ),
 
-        scaffoldBackground: Colors.black, // 主屏幕背景颜色为黑色
-        textTheme: GoogleFonts.notoSansAdlamTextTheme(
-          Theme.of(context).textTheme.apply(
-                bodyColor: Colors.white, // 设置字体颜色为浅色
-                displayColor: Colors.white, // 设置显示文字颜色为浅色
-              ),
+        // 自定义颜色
+        primaryColor: const Color(0xFF00A99D),
+
+        // 背景颜色
+        scaffoldBackgroundColor: Colors.white,
+
+        // 字体主题
+        textTheme: GoogleFonts.notoSansTextTheme(
+          ThemeData.light().textTheme,
+        ).copyWith(
+          displayLarge: const TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            letterSpacing: -0.5,
+          ),
+          displayMedium: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            letterSpacing: -0.5,
+          ),
+          titleLarge: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0,
+          ),
+          bodyLarge: const TextStyle(
+            fontSize: 16,
+            letterSpacing: 0.15,
+            height: 1.5,
+          ),
+          bodyMedium: const TextStyle(
+            fontSize: 14,
+            letterSpacing: 0.25,
+            height: 1.5,
+          ),
         ),
-        // iconTheme: const IconThemeData(color: Colors.white), // 设置图标颜色为浅色
-        usedColors: 1,
-        surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
-        blendLevel: 15,
-        appBarElevation: 2,
-        subThemesData: const FlexSubThemesData(
-          blendOnLevel: 20,
-          useTextTheme: true,
-          useM2StyleDividerInM3: true,
+
+        // AppBar 主题
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          elevation: 0,
+          scrolledUnderElevation: 2,
+          backgroundColor: Colors.white,
+          foregroundColor: Color(0xFF00A99D),
+          systemOverlayStyle: SystemUiOverlayStyle.dark,
         ),
-        useMaterial3ErrorColors: true,
-        visualDensity: FlexColorScheme.comfortablePlatformDensity,
-        useMaterial3: true,
-        swapLegacyOnMaterial3: true,
+
+        // 卡片主题
+        cardTheme: const CardTheme(
+          elevation: 2,
+          shadowColor: Colors.black12,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+        ),
+
+        // 输入框主题
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF00A99D), width: 2),
+          ),
+          contentPadding: const EdgeInsets.all(16),
+        ),
+
+        // 按钮主题
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+
+        // 图标主题
+        iconTheme: const IconThemeData(
+          color: Color(0xFF00A99D),
+          size: 24,
+        ),
       ),
+
+      // 深色主题
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF00A99D),
+          brightness: Brightness.dark,
+        ),
+        scaffoldBackgroundColor: Colors.black,
+        textTheme: GoogleFonts.notoSansTextTheme(
+          ThemeData.dark().textTheme,
+        ),
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          elevation: 0,
+          backgroundColor: Colors.black,
+          foregroundColor: Color(0xFF80CBC4),
+          systemOverlayStyle: SystemUiOverlayStyle.light,
+        ),
+        cardTheme: CardTheme(
+          elevation: 2,
+          shadowColor: Colors.black26,
+          color: Colors.grey.shade900,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey.shade900,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF80CBC4), width: 2),
+          ),
+          contentPadding: const EdgeInsets.all(16),
+        ),
+      ),
+
       themeMode: ThemeMode.light,
       onGenerateRoute: onGenerateRoute,
       home: SplashScreen(),
-      navigatorKey: navigatorKey, // 使用 GlobalKey
+      navigatorKey: navigatorKey,
       builder: EasyLoading.init(),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lazyreader/components/article_card.dart';
 import 'package:lazyreader/service/rss_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -24,7 +25,6 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
   void initState() {
     super.initState();
     _loadInitialData();
-    // 初始化中文时间显示
     timeago.setLocaleMessages('zh', timeago.ZhMessages());
   }
 
@@ -42,7 +42,6 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
       });
 
       final feedId = widget.source['id'];
-
       final detailResponse = await _rssService.getFeedDetail(feedId);
       final articlesResponse = await _rssService.getFeedPreviewArticles(feedId);
 
@@ -80,8 +79,6 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
       });
 
       // TODO: Implement actual subscription API call
-      // await _rssService.toggleSubscription(feedId);
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -90,17 +87,23 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
                 isSubscribed ? Icons.check_circle : Icons.info,
                 color: Colors.white,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(isSubscribed ? '订阅成功' : '已取消订阅'),
             ],
           ),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: isSubscribed ? Colors.green : Colors.grey[700],
+          backgroundColor:
+              isSubscribed ? Colors.green.shade600 : Colors.grey[700],
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
-          duration: Duration(seconds: 2),
-          margin: EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+          margin: const EdgeInsets.all(16),
+          elevation: 4,
+          animation: CurvedAnimation(
+            parent: const AlwaysStoppedAnimation(1),
+            curve: Curves.easeOutCirc,
+          ),
         ),
       );
     } catch (e) {
@@ -110,18 +113,19 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
-            children: [
+            children: const [
               Icon(Icons.error_outline, color: Colors.white),
               SizedBox(width: 8),
               Text('操作失败，请稍后重试'),
             ],
           ),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
-          margin: EdgeInsets.all(16),
+          backgroundColor: Colors.red.shade600,
+          margin: const EdgeInsets.all(16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
+          elevation: 4,
         ),
       );
     }
@@ -140,36 +144,14 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black87, size: 20),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          '订阅源详情',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        centerTitle: true,
-        actions: [
-          if (errorMessage.isNotEmpty)
-            IconButton(
-              icon: Icon(Icons.refresh_rounded, color: Colors.black87),
-              onPressed: _loadInitialData,
-            ),
-        ],
-      ),
+      backgroundColor: Colors.grey[100],
+      appBar: _buildAppBar(),
       body: AnimatedSwitcher(
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         child: isLoading
-            ? Center(
+            ? const Center(
                 child: CircularProgressIndicator(
+                  strokeWidth: 3,
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                 ),
               )
@@ -183,6 +165,36 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
     );
   }
 
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios, color: Colors.black87, size: 20),
+        onPressed: () => Navigator.of(context).pop(),
+        tooltip: '返回',
+      ),
+      title: const Text(
+        '订阅源详情',
+        style: TextStyle(
+          color: Colors.black87,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
+      ),
+      backgroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: true,
+      actions: [
+        if (errorMessage.isNotEmpty)
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.black87),
+            onPressed: _loadInitialData,
+            tooltip: '重新加载',
+          ),
+      ],
+    );
+  }
+
   Widget _buildErrorState() {
     return Center(
       child: Column(
@@ -190,34 +202,36 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
         children: [
           Icon(
             Icons.error_outline_rounded,
-            size: 48,
-            color: Colors.grey,
+            size: 56,
+            color: Colors.grey[400],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             errorMessage,
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 16,
+              height: 1.5,
             ),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: _loadInitialData,
-            icon: Icon(Icons.refresh_rounded),
-            label: Text('重试'),
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('重新加载'),
             style: ElevatedButton.styleFrom(
               foregroundColor: Colors.white,
               backgroundColor: Colors.blue,
-              padding: EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32,
+                vertical: 16,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(25),
               ),
               elevation: 2,
+              shadowColor: Colors.blue.withOpacity(0.3),
             ),
           ),
         ],
@@ -228,19 +242,24 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
   Widget _buildContent() {
     return RefreshIndicator(
       onRefresh: _loadInitialData,
+      color: Colors.blue,
+      backgroundColor: Colors.white,
+      strokeWidth: 3,
       child: CustomScrollView(
         controller: _scrollController,
-        physics: AlwaysScrollableScrollPhysics(),
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         slivers: [
           SliverToBoxAdapter(
             child: _buildSourceInfo(),
           ),
           SliverPadding(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 24,
-              bottom: 12,
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 32,
+              bottom: 16,
             ),
             sliver: SliverToBoxAdapter(
               child: Row(
@@ -249,17 +268,18 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
                     width: 4,
                     height: 20,
                     decoration: BoxDecoration(
-                      color: Colors.blue,
+                      color: Colors.blue.shade600,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  SizedBox(width: 8),
-                  Text(
+                  const SizedBox(width: 12),
+                  const Text(
                     '最新文章',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
@@ -268,7 +288,7 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
           ),
           _buildArticlesList(),
           SliverToBoxAdapter(
-            child: SizedBox(height: 100), // Bottom padding for FAB
+            child: SizedBox(height: 100),
           ),
         ],
       ),
@@ -278,45 +298,48 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
   Widget _buildSourceInfo() {
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.all(16),
-      padding: EdgeInsets.all(20),
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         children: [
           _buildSourceLogo(),
-          SizedBox(height: 20),
+          const SizedBox(height: 24),
           Text(
             sourceDetail['title'] ?? widget.source['title'] ?? '',
-            style: TextStyle(
-              fontSize: 24,
+            style: const TextStyle(
+              fontSize: 26,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
+              letterSpacing: 0.5,
+              height: 1.3,
             ),
             textAlign: TextAlign.center,
           ),
           if (sourceDetail['description']?.isNotEmpty ?? false) ...[
-            SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               sourceDetail['description'] ?? '',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
-                height: 1.5,
+                height: 1.6,
+                letterSpacing: 0.3,
               ),
               textAlign: TextAlign.center,
             ),
           ],
-          SizedBox(height: 20),
+          const SizedBox(height: 24),
           _buildSourceStats(),
         ],
       ),
@@ -324,64 +347,66 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
   }
 
   Widget _buildSourceLogo() {
-    if (sourceDetail['logo'] != null && sourceDetail['logo'].isNotEmpty) {
-      return Container(
-        width: 80,
-        height: 80,
+    return Hero(
+      tag: 'source_logo_${widget.source['id']}',
+      child: Container(
+        width: 96,
+        height: 96,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(48),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: Offset(0, 2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(40),
-          child: Image.network(
-            sourceDetail['logo'],
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => _buildLogoFallback(),
-          ),
-        ),
-      );
-    }
-    return _buildLogoFallback();
+        child: sourceDetail['logo'] != null && sourceDetail['logo'].isNotEmpty
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(48),
+                child: Image.network(
+                  sourceDetail['logo'],
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      _buildLogoFallback(),
+                ),
+              )
+            : _buildLogoFallback(),
+      ),
+    );
   }
 
   Widget _buildLogoFallback() {
     String logoText =
         (sourceDetail['title']?.substring(0, 2) ?? 'RS').toUpperCase();
     return Container(
-      width: 80,
-      height: 80,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.blue.shade300,
-            Colors.blue.shade500,
+            Colors.blue.shade400,
+            Colors.blue.shade600,
           ],
         ),
-        borderRadius: BorderRadius.circular(40),
+        borderRadius: BorderRadius.circular(48),
         boxShadow: [
           BoxShadow(
             color: Colors.blue.withOpacity(0.3),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Center(
         child: Text(
           logoText,
-          style: TextStyle(
-            fontSize: 28,
+          style: const TextStyle(
+            fontSize: 32,
             fontWeight: FontWeight.bold,
             color: Colors.white,
+            letterSpacing: 1,
           ),
         ),
       ),
@@ -390,26 +415,27 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
 
   Widget _buildSourceStats() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.blue.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             Icons.article_outlined,
-            size: 18,
-            color: Colors.blue,
+            size: 20,
+            color: Colors.blue.shade600,
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 10),
           Text(
             '${sourceDetail['total_articles_count'] ?? 0} 篇文章',
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.blue,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.blue.shade600,
+              letterSpacing: 0.5,
             ),
           ),
         ],
@@ -426,15 +452,16 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
             children: [
               Icon(
                 Icons.article_outlined,
-                size: 48,
-                color: Colors.grey[400],
+                size: 56,
+                color: Colors.grey[300],
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 20),
               Text(
                 '暂无文章',
                 style: TextStyle(
-                  color: Colors.grey[600],
+                  color: Colors.grey[500],
                   fontSize: 16,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -448,44 +475,9 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
         (context, index) {
           final article = articles[index];
           return Container(
-            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () {
-                  if (article['link']?.isNotEmpty ?? false) {
-                    // TODO: Navigate to article detail
-                    print('Navigate to: ${article['link']}');
-                  }
-                },
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (article['thumbnail_url'] != null) ...[
-                        _buildArticleThumbnail(article['thumbnail_url']),
-                        SizedBox(width: 16),
-                      ],
-                      Expanded(
-                        child: _buildArticleContent(article),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: ArticleCard(
+              article: article,
             ),
           );
         },
@@ -494,117 +486,49 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
     );
   }
 
-  Widget _buildArticleThumbnail(String url) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: Image.network(
-        url,
-        width: 100,
-        height: 100,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            Icons.image_not_supported_outlined,
-            color: Colors.grey[400],
-            size: 32,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildArticleContent(Map<String, dynamic> article) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          article['title'] ?? '',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-            height: 1.4,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        if (article['summary']?.isNotEmpty ?? false) ...[
-          SizedBox(height: 8),
-          Text(
-            article['summary'],
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-              height: 1.4,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-        SizedBox(height: 12),
-        Row(
-          children: [
-            Icon(
-              Icons.access_time_rounded,
-              size: 14,
-              color: Colors.grey[400],
-            ),
-            SizedBox(width: 4),
-            Text(
-              _getTimeAgo(article['published_date']),
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[400],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildSubscribeButton() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
+        width: double.infinity,
+        height: 56,
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: (isSubscribed ? Colors.grey[300]! : Colors.blue)
-                  .withOpacity(0.3),
-              blurRadius: 8,
-              offset: Offset(0, 2),
+              color: (isSubscribed ? Colors.grey[400]! : Colors.blue)
+                  .withOpacity(0.25),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: ElevatedButton(
           onPressed: _toggleSubscription,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(isSubscribed ? Icons.check : Icons.add),
-              SizedBox(width: 8),
-              Text(isSubscribed ? '已订阅' : '订阅'),
-            ],
-          ),
           style: ElevatedButton.styleFrom(
             foregroundColor: Colors.white,
-            backgroundColor: isSubscribed ? Colors.grey[400] : Colors.blue,
-            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            backgroundColor:
+                isSubscribed ? Colors.grey[400] : Colors.blue.shade600,
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(28),
             ),
             elevation: 0,
-            textStyle: TextStyle(
-              fontSize: 16,
+            textStyle: const TextStyle(
+              fontSize: 17,
               fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
             ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isSubscribed ? Icons.check : Icons.add,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(isSubscribed ? '已订阅' : '订阅'),
+            ],
           ),
         ),
       ),
