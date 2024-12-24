@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:lazyreader/pages/rss/rss_source_detail.dart';
-import 'package:lazyreader/service/rss_service.dart';
+import 'package:lazyreader/pages/feed/detail.dart';
+import 'package:lazyreader/service/feed_service.dart';
 
 class RssSourceList extends StatefulWidget {
   final String categoryId;

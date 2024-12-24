@@ -1,8 +1,8 @@
 import 'package:lazyreader/utils/http_util.dart';
 
-class NewsService {
-  Future<dynamic> getNewsList(parameters) async {
-    const path = 'v1/rss/articles'; // 文章列表
+class ArticleService {
+  Future<dynamic> getSubscriptionArticles(parameters) async {
+    const path = 'feed/subscription_articles'; // 文章列表
     try {
       final response =
           await HttpUtil.request(path, method: 'GET', parameters: parameters);

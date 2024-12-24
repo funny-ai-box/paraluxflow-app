@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lazyreader/components/article_card.dart';
-import 'package:lazyreader/service/rss_service.dart';
+import 'package:lazyreader/service/feed_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class RssSourceDetailPage extends StatefulWidget {
@@ -42,8 +42,17 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
       });
 
       final feedId = widget.source['id'];
-      final detailResponse = await _rssService.getFeedDetail(feedId);
-      final articlesResponse = await _rssService.getFeedPreviewArticles(feedId);
+
+      // 并行加载数据
+      final futures = await Future.wait([
+        _rssService.getFeedDetail(feedId),
+        _rssService.getFeedPreviewArticles(feedId),
+        _rssService.getSubscriptionStatus(feedId),
+      ]);
+
+      final detailResponse = futures[0];
+      final articlesResponse = futures[1];
+      final subscriptionStatus = futures[2];
 
       List<Map<String, dynamic>> articlesList = [];
       if (articlesResponse != null && articlesResponse['items'] != null) {
@@ -56,7 +65,7 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
         setState(() {
           sourceDetail = detailResponse ?? {};
           articles = articlesList;
-          isSubscribed = false;
+          isSubscribed = subscriptionStatus;
           isLoading = false;
         });
       }
@@ -74,70 +83,73 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
   Future<void> _toggleSubscription() async {
     try {
       final feedId = widget.source['id'];
+      final previousState = isSubscribed;
+
       setState(() {
         isSubscribed = !isSubscribed;
       });
 
-      // TODO: Implement actual subscription API call
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(
-                isSubscribed ? Icons.check_circle : Icons.info,
-                color: Colors.white,
-              ),
-              const SizedBox(width: 8),
-              Text(isSubscribed ? '订阅成功' : '已取消订阅'),
-            ],
+      if (previousState) {
+        await _rssService.unsubscribeFeed(feedId);
+      } else {
+        await _rssService.subscribeFeed(feedId);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  isSubscribed ? Icons.check_circle : Icons.info,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 8),
+                Text(isSubscribed ? '订阅成功' : '取消订阅成功'),
+              ],
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor:
+                isSubscribed ? Colors.green.shade600 : Colors.red.shade600,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            duration: const Duration(seconds: 2),
+            margin: const EdgeInsets.all(16),
+            elevation: 4,
+            animation: CurvedAnimation(
+              parent: const AlwaysStoppedAnimation(1),
+              curve: Curves.easeOutCirc,
+            ),
           ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor:
-              isSubscribed ? Colors.green.shade600 : Colors.grey[700],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          duration: const Duration(seconds: 2),
-          margin: const EdgeInsets.all(16),
-          elevation: 4,
-          animation: CurvedAnimation(
-            parent: const AlwaysStoppedAnimation(1),
-            curve: Curves.easeOutCirc,
-          ),
-        ),
-      );
+        );
+      }
     } catch (e) {
+      // 操作失败，恢复状态
       setState(() {
         isSubscribed = !isSubscribed;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: const [
-              Icon(Icons.error_outline, color: Colors.white),
-              SizedBox(width: 8),
-              Text('操作失败，请稍后重试'),
-            ],
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red.shade600,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 4,
-        ),
-      );
-    }
-  }
 
-  String _getTimeAgo(String? dateString) {
-    if (dateString == null) return '';
-    try {
-      final date = DateTime.parse(dateString);
-      return timeago.format(date, locale: 'zh');
-    } catch (e) {
-      return '';
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 8),
+                Text('操作失败，请稍后重试'),
+              ],
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red.shade600,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 4,
+          ),
+        );
+      }
     }
   }
 
@@ -470,18 +482,41 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
       );
     }
 
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final article = articles[index];
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            child: ArticleCard(
-              article: article,
-            ),
-          );
-        },
-        childCount: articles.length,
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final article = articles[index];
+
+            // 計算是否是最後一個元素
+            bool isLastItem = index == articles.length - 1;
+
+            return Container(
+              margin: EdgeInsets.only(
+                bottom: isLastItem ? 0 : 12,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: ArticleCard(
+                  article: article,
+                ),
+              ),
+            );
+          },
+          childCount: articles.length,
+        ),
       ),
     );
   }
@@ -495,8 +530,8 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: (isSubscribed ? Colors.grey[400]! : Colors.blue)
-                  .withOpacity(0.25),
+              color:
+                  (isSubscribed ? Colors.red : Colors.blue).withOpacity(0.25),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -507,7 +542,7 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
           style: ElevatedButton.styleFrom(
             foregroundColor: Colors.white,
             backgroundColor:
-                isSubscribed ? Colors.grey[400] : Colors.blue.shade600,
+                isSubscribed ? Colors.red.shade600 : Colors.blue.shade600,
             padding: const EdgeInsets.symmetric(horizontal: 32),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(28),
@@ -523,11 +558,11 @@ class _RssSourceDetailPageState extends State<RssSourceDetailPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                isSubscribed ? Icons.check : Icons.add,
+                isSubscribed ? Icons.remove_circle_outline : Icons.add,
                 size: 24,
               ),
               const SizedBox(width: 12),
-              Text(isSubscribed ? '已订阅' : '订阅'),
+              Text(isSubscribed ? '取消订阅' : '订阅'),
             ],
           ),
         ),

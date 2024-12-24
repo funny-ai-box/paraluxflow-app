@@ -30,156 +30,139 @@ class ArticleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isRead =
-        article.containsKey('is_read') ? article['is_read'] ?? false : false;
-    String? feedTitle = article['feed_title'];
-    Color summaryColor = isRead ? Colors.grey[400]! : Colors.grey[600]!;
-    Color titleColor = isRead ? Colors.grey[600]! : Colors.black87;
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => NewsDetails(
-              detailId: article['id'],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => NewsDetails(
+                detailId: article['id'],
+              ),
             ),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (article['thumbnail_url'] != null) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: CachedNetworkImage(
-                      imageUrl: article['thumbnail_url'].toString(),
-                      placeholder: (context, url) => Container(
-                        width: 110,
-                        height: 110,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Theme.of(context).primaryColor,
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end, // 修改为底部对齐
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // 保证内容合理分布
+                  children: [
+                    // Feed 信息行
+                    Row(
+                      children: [
+                        if (article['feed_logo'] != null) ...[
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: CachedNetworkImage(
+                              imageUrl: article['feed_logo'],
+                              width: 16,
+                              height: 16,
+                              placeholder: (context, url) => Container(
+                                color: Colors.grey[100],
+                              ),
+                              errorWidget: (context, url, error) => Container(
+                                color: Colors.grey[100],
+                                child: Icon(Icons.rss_feed,
+                                    size: 12, color: Colors.grey[400]),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        width: 110,
-                        height: 110,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.image_not_supported_outlined,
-                          color: Colors.grey[400],
-                          size: 32,
-                        ),
-                      ),
-                      width: 110,
-                      height: 110,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        article['title'],
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          height: 1.4,
-                          color: titleColor,
-                          letterSpacing: 0.3,
-                        ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (article['summary']?.isNotEmpty ?? false) ...[
-                        const SizedBox(height: 8),
+                          const SizedBox(width: 6),
+                        ],
                         Text(
-                          article['summary'] ?? '',
+                          article['feed_title'] ?? '',
                           style: TextStyle(
-                            fontSize: 14,
-                            color: summaryColor,
-                            height: 1.4,
-                            letterSpacing: 0.2,
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 3,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[400],
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          formatPublishedDate(article['published_date']),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[500],
+                          ),
                         ),
                       ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (feedTitle?.isNotEmpty ?? false)
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                    ),
+                    const SizedBox(height: 8),
+                    // 文章标题
+                    Text(
+                      article['title'],
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        height: 1.4,
+                        letterSpacing: 0.2,
                       ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        feedTitle!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (article['summary']?.isNotEmpty ?? false) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        article['summary'],
                         style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                          height: 1.4,
+                          letterSpacing: 0.1,
                         ),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (article['thumbnail_url'] != null) ...[
+                const SizedBox(width: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: CachedNetworkImage(
+                    imageUrl: article['thumbnail_url'],
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: Colors.grey[100],
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.grey[300],
+                        ),
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: Colors.grey[100],
+                      child: Icon(
+                        Icons.image_not_supported_outlined,
+                        color: Colors.grey[300],
+                        size: 24,
                       ),
                     ),
                   ),
-                if (feedTitle?.isNotEmpty ?? false) const SizedBox(width: 12),
-                Text(
-                  formatPublishedDate(article['published_date']),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: summaryColor,
-                    fontWeight: FontWeight.w500,
-                  ),
                 ),
               ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

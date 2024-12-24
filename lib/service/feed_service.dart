@@ -52,15 +52,63 @@ class RssService {
     }
   }
 
-  Future<bool> getSubscriptionStatus(int sourceId) async {
-    final path = 'feed/user_subscription_status';
+  Future<bool> getSubscriptionStatus(int feedId) async {
+    const path = 'feed/user_subscription_status';
     try {
-      final response =
-          await HttpUtil.request(path, method: 'GET', parameters: {});
-      print(response);
+      final response = await HttpUtil.request(
+        path,
+        method: 'GET',
+        parameters: {'feed_id': feedId},
+      );
       return response['data']['is_subscribed'] ?? false;
     } catch (e) {
       throw Exception('获取订阅状态失败: $e');
+    }
+  }
+
+  // 订阅 RSS 源
+  Future<void> subscribeFeed(int feedId) async {
+    const path = 'feed/subscribe';
+    try {
+      await HttpUtil.request(
+        path,
+        method: 'POST',
+        parameters: {'feed_id': feedId},
+      );
+    } catch (e) {
+      throw Exception('订阅失败: $e');
+    }
+  }
+
+  // 取消订阅 RSS 源
+  Future<void> unsubscribeFeed(int feedId) async {
+    const path = 'feed/unsubscribe';
+    try {
+      await HttpUtil.request(
+        path,
+        method: 'POST',
+        parameters: {'feed_id': feedId},
+      );
+    } catch (e) {
+      throw Exception('取消订阅失败: $e');
+    }
+  }
+
+  // 获取用户订阅的所有 RSS 源
+  Future<dynamic> getUserSubscriptions({int page = 1, int perPage = 20}) async {
+    const path = 'feed/user_subscriptions';
+    try {
+      final response = await HttpUtil.request(
+        path,
+        method: 'GET',
+        parameters: {
+          'page': page,
+          'per_page': perPage,
+        },
+      );
+      return response['data'];
+    } catch (e) {
+      throw Exception('获取订阅列表失败: $e');
     }
   }
 }

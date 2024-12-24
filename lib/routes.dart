@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'pages/home_screen.dart';
-import './pages/rss/index.dart';
+import 'pages/feed/index.dart';
 // import './pages/news/index.dart';
 // import './pages/news/summary_app.dart';
 import 'pages/articles/list.dart';

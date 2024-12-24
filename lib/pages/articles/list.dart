@@ -7,7 +7,7 @@ import 'package:lazyreader/components/article_card.dart';
 import 'package:lazyreader/pages/articles/sidebar.dart';
 
 import 'package:easy_refresh/easy_refresh.dart';
-import 'package:lazyreader/service/news_service.dart';
+import 'package:lazyreader/service/article_service.dart';
 
 class ImageCacheManager {
   static final ImageCacheManager _instance = ImageCacheManager._internal();
@@ -53,23 +53,19 @@ class _CIProperties {
 
 class _ArticleListState extends State<ArticleList> {
   List<Map<String, dynamic>> articleList = [];
-  List<Map<String, dynamic>> subscribedUnRead = [];
   Map<String, dynamic> nowFeed = {};
   bool isMore = true;
-  int selectedIndex = 0;
+  int currentPage = 1;
+  int totalPages = 1;
   late EasyRefreshController _controller;
-  int _selectedIndex = 0; // 默认值
+  int _selectedIndex = 0;
 
   Axis _scrollDirection = Axis.vertical;
-
-  List<Map<String, dynamic>> filteredList = [];
 
   @override
   void initState() {
     super.initState();
-    fetchData(
-      true,
-    );
+    fetchData(true);
     _controller = EasyRefreshController(
       controlFinishRefresh: true,
       controlFinishLoad: true,
@@ -88,53 +84,51 @@ class _ArticleListState extends State<ArticleList> {
     });
   }
 
-  // 阅读文章
-  //delete
-  Future<void> readArtice(int index) async {
-    NewsService newsService = NewsService();
-    Map<String, dynamic> queryParams = {
-      'article_id': articleList[index]['id'],
-    };
-    try {
-      await newsService.getDetailsInfo(queryParams);
+  Future<void> fetchData(bool reset) async {
+    ArticleService articleService = ArticleService();
 
-      articleList[index]['is_read'] = true;
-      setState(() {
-        articleList = articleList;
-      });
+    // 如果是重置，则从第1页开始
+    if (reset) {
+      currentPage = 1;
+    }
+
+    Map<String, dynamic> queryParams = {
+      'page': currentPage,
+      'per_page': 20,
+    };
+
+    // 如果选择了特定feed，添加feed_id参数
+    if (nowFeed.isNotEmpty && nowFeed['feed_id'] != null) {
+      queryParams['feed_id'] = nowFeed['feed_id'];
+    }
+
+    try {
+      var response = await articleService.getSubscriptionArticles(queryParams);
+      if (response['code'] == 200) {
+        var result = response['data'];
+        List<Map<String, dynamic>> newDataList =
+            List<Map<String, dynamic>>.from(result['items']);
+
+        setState(() {
+          if (reset) {
+            articleList = newDataList;
+          } else {
+            articleList.addAll(newDataList);
+          }
+
+          currentPage = result['current_page'];
+          totalPages = result['pages'];
+          isMore = currentPage < totalPages;
+
+          // 如果加载成功且还有更多数据，增加页码
+          if (!reset && isMore) {
+            currentPage++;
+          }
+        });
+      }
     } catch (e) {
       print('Error fetching data: $e');
     }
-  }
-
-  fetchData(bool reset) async {
-    NewsService newsService = NewsService();
-
-    Map<String, dynamic> queryParams = {};
-    if (nowFeed.isNotEmpty) {
-      queryParams["feed_id"] = nowFeed['feed_id'];
-      queryParams["page_size"] = 10;
-    }
-    if (!reset) {
-      queryParams['last_id'] = articleList[articleList.length - 1]['id'];
-      queryParams['last_published_date'] =
-          articleList[articleList.length - 1]['published_date'];
-    }
-
-    try {
-      var result = await newsService.getNewsList(queryParams);
-      List<Map<String, dynamic>> newDataList =
-          List<Map<String, dynamic>>.from(result['data']['list']);
-
-      setState(() {
-        if (reset) {
-          articleList = newDataList;
-        } else {
-          articleList.addAll(newDataList);
-        }
-        isMore = result['data']['is_more'];
-      });
-    } catch (e) {}
   }
 
   @override
@@ -146,26 +140,25 @@ class _ArticleListState extends State<ArticleList> {
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
-              icon: Icon(Icons.menu),
+              icon: const Icon(Icons.menu),
               onPressed: () {
                 Scaffold.of(context).openDrawer();
               },
             );
           },
         ),
-        title: Text(
-            nowFeed.isEmpty ? "All Articles" : nowFeed['rss_feed']['title'],
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: Text(nowFeed.isEmpty ? "All Articles" : nowFeed['title'] ?? "",
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         centerTitle: false,
         actions: [
           IconButton(
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
             onPressed: () {},
           ),
         ],
       ),
       drawer: Drawer(
-          shape: RoundedRectangleBorder(
+          shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
               topRight: Radius.zero,
               bottomRight: Radius.zero,
@@ -175,70 +168,73 @@ class _ArticleListState extends State<ArticleList> {
             child: FeedDrawer(
               selectedIndex: _selectedIndex,
               onSelectedIndexChange: _updateSelectedIndex,
-              onSelectFeed: (feed) => {
+              onSelectFeed: (feed) {
                 setState(() {
                   articleList = [];
-                  nowFeed = feed != null ? feed : {};
-                }),
-                fetchData(true)
+                  nowFeed = feed ?? {};
+                });
+                fetchData(true);
               },
             ),
           )),
-      body: NotificationListener<ScrollNotification>(
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: Row(
-                  children: <Widget>[
-                    if (articleList.isNotEmpty)
-                      Expanded(
-                        child: Stack(
-                          children: <Widget>[
-                            EasyRefresh(
-                              clipBehavior: Clip.none,
-                              controller: _controller,
-                              header: ClassicHeader(),
-                              footer: ClassicFooter(),
-                              onRefresh: () async {
-                                await fetchData(true);
-                                if (!mounted) return;
-                                _controller.finishRefresh();
-                                _controller.resetFooter();
-                              },
-                              onLoad: () async {
-                                await fetchData(false);
-                                if (!mounted) return;
-                                _controller.finishLoad(
-                                  !isMore
-                                      ? IndicatorResult.noMore
-                                      : IndicatorResult.success,
-                                );
-                              },
-                              child: ListView.separated(
-                                itemCount: articleList.length,
-                                scrollDirection: _scrollDirection,
-                                separatorBuilder: (context, index) {
-                                  return Divider(
-                                    thickness: 1,
-                                    color: Colors.grey[200],
-                                  );
-                                },
-                                itemBuilder: (context, index) {
-                                  return ArticleCard(
-                                    article: articleList[index],
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Stack(
+                      children: <Widget>[
+                        EasyRefresh(
+                          clipBehavior: Clip.none,
+                          controller: _controller,
+                          header: const ClassicHeader(),
+                          footer: const ClassicFooter(),
+                          onRefresh: () async {
+                            await fetchData(true);
+                            if (!mounted) return;
+                            _controller.finishRefresh();
+                            _controller.resetFooter();
+                          },
+                          onLoad: () async {
+                            if (isMore) {
+                              await fetchData(false);
+                            }
+                            if (!mounted) return;
+                            _controller.finishLoad(
+                              !isMore
+                                  ? IndicatorResult.noMore
+                                  : IndicatorResult.success,
+                            );
+                          },
+                          child: articleList.isEmpty
+                              ? const Center(
+                                  child: Text('No articles found'),
+                                )
+                              : ListView.separated(
+                                  itemCount: articleList.length,
+                                  scrollDirection: _scrollDirection,
+                                  separatorBuilder: (context, index) {
+                                    return Divider(
+                                      thickness: 1,
+                                      color: Colors.grey[200],
+                                    );
+                                  },
+                                  itemBuilder: (context, index) {
+                                    return ArticleCard(
+                                      article: articleList[index],
+                                    );
+                                  },
+                                ),
                         ),
-                      ),
-                  ],
-                ),
-              )
-            ],
-          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          ],
         ),
       ),
     );

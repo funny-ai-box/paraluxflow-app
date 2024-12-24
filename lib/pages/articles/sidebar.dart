@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lazyreader/pages/rss/index.dart';
-import 'package:lazyreader/service/rss_service.dart';
+import 'package:lazyreader/pages/feed/index.dart';
+import 'package:lazyreader/service/feed_service.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class FeedDrawer extends StatefulWidget {

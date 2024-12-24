@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lazyreader/pages/rss/rss_source_list.dart';
-import 'package:lazyreader/service/rss_service.dart';
+import 'package:lazyreader/pages/feed/list.dart';
+import 'package:lazyreader/service/feed_service.dart';
 
 class RssCategoryList extends StatefulWidget {
   @override

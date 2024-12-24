@@ -3,7 +3,7 @@ import 'package:lazyreader/pages/articles/favorite_list.dart';
 import 'package:lazyreader/pages/home/index.dart';
 import 'package:lazyreader/pages/articles/list.dart';
 import 'package:lazyreader/pages/mine/index.dart';
-import 'package:lazyreader/pages/rss/index.dart';
+import 'package:lazyreader/pages/feed/index.dart';
 
 class HomeScreenPage extends StatefulWidget {
   const HomeScreenPage({Key? key}) : super(key: key);
