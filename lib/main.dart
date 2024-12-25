@@ -24,6 +24,11 @@ void main() async {
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+// 定义主题颜色常量
+const primaryColor = Color(0xFF0088CC); // 主色调：深邃的蓝色
+const secondaryColor = Color(0xFF00A0E4); // 次要颜色：明亮的蓝色
+const accentColor = Color(0xFF40C4FF); // 强调色：浅蓝色
+
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -46,7 +51,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    // 设置系统UI样式
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
@@ -62,24 +66,27 @@ class _MyAppState extends State<MyApp> {
 
         // 颜色方案
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF00A99D),
+          seedColor: primaryColor,
           brightness: Brightness.light,
+          secondary: secondaryColor,
+          tertiary: accentColor,
         ),
 
-        // 自定义颜色
-        primaryColor: const Color(0xFF00A99D),
+        // 主色调
+        primaryColor: primaryColor,
 
         // 背景颜色
         scaffoldBackgroundColor: Colors.white,
 
         // 字体主题
-        textTheme: GoogleFonts.notoSansTextTheme(
+        textTheme: GoogleFonts.interTextTheme(
           ThemeData.light().textTheme,
         ).copyWith(
           displayLarge: const TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
             letterSpacing: -0.5,
+            color: primaryColor,
           ),
           displayMedium: const TextStyle(
             fontSize: 28,
@@ -109,15 +116,15 @@ class _MyAppState extends State<MyApp> {
           elevation: 0,
           scrolledUnderElevation: 2,
           backgroundColor: Colors.white,
-          foregroundColor: Color(0xFF00A99D),
+          foregroundColor: primaryColor,
           systemOverlayStyle: SystemUiOverlayStyle.dark,
         ),
 
         // 卡片主题
-        cardTheme: const CardTheme(
+        cardTheme: CardTheme(
           elevation: 2,
-          shadowColor: Colors.black12,
-          shape: RoundedRectangleBorder(
+          shadowColor: primaryColor.withOpacity(0.1),
+          shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
         ),
@@ -136,7 +143,7 @@ class _MyAppState extends State<MyApp> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF00A99D), width: 2),
+            borderSide: const BorderSide(color: primaryColor, width: 2),
           ),
           contentPadding: const EdgeInsets.all(16),
         ),
@@ -149,12 +156,14 @@ class _MyAppState extends State<MyApp> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            backgroundColor: primaryColor,
+            foregroundColor: Colors.white,
           ),
         ),
 
         // 图标主题
         iconTheme: const IconThemeData(
-          color: Color(0xFF00A99D),
+          color: primaryColor,
           size: 24,
         ),
       ),
@@ -164,31 +173,33 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
         brightness: Brightness.dark,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF00A99D),
+          seedColor: primaryColor,
           brightness: Brightness.dark,
+          secondary: secondaryColor,
+          tertiary: accentColor,
         ),
-        scaffoldBackgroundColor: Colors.black,
-        textTheme: GoogleFonts.notoSansTextTheme(
+        scaffoldBackgroundColor: const Color(0xFF121212),
+        textTheme: GoogleFonts.interTextTheme(
           ThemeData.dark().textTheme,
         ),
         appBarTheme: const AppBarTheme(
           centerTitle: true,
           elevation: 0,
-          backgroundColor: Colors.black,
-          foregroundColor: Color(0xFF80CBC4),
+          backgroundColor: Color(0xFF121212),
+          foregroundColor: secondaryColor,
           systemOverlayStyle: SystemUiOverlayStyle.light,
         ),
         cardTheme: CardTheme(
           elevation: 2,
-          shadowColor: Colors.black26,
-          color: Colors.grey.shade900,
+          shadowColor: primaryColor.withOpacity(0.2),
+          color: const Color(0xFF1E1E1E),
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Colors.grey.shade900,
+          fillColor: const Color(0xFF1E1E1E),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -199,7 +210,7 @@ class _MyAppState extends State<MyApp> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF80CBC4), width: 2),
+            borderSide: const BorderSide(color: secondaryColor, width: 2),
           ),
           contentPadding: const EdgeInsets.all(16),
         ),

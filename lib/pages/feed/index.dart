@@ -52,65 +52,43 @@ class _RssPageState extends State<RSS> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        title: Text('RSS Categories',
-            style: TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.w600,
-              fontSize: 18,
-            )),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search, color: Colors.black87),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       body: RefreshIndicator(
-        onRefresh: _fetchCategories,
-        child: categoryList.isEmpty
-            ? Center(child: CircularProgressIndicator())
-            : ListView.builder(
-                padding: EdgeInsets.all(12),
-                itemCount: (categoryList.length / 2).ceil(),
-                itemBuilder: (context, index) {
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: _buildCategoryTile(categoryList[index * 2]),
-                      ),
-                      SizedBox(width: 12),
-                      if (index * 2 + 1 < categoryList.length)
-                        Expanded(
-                          child:
-                              _buildCategoryTile(categoryList[index * 2 + 1]),
-                        ),
-                      if (index * 2 + 1 >= categoryList.length) Spacer(),
-                    ],
-                  );
-                },
-              ),
-      ),
+          onRefresh: _fetchCategories,
+          child: categoryList.isEmpty
+              ? Center(child: CircularProgressIndicator())
+              : SafeArea(
+                  child: ListView.builder(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    itemCount: categoryList.length,
+                    itemBuilder: (context, index) {
+                      return _buildCategoryItem(categoryList[index]);
+                    },
+                  ),
+                )),
     );
   }
 
-  Widget _buildCategoryTile(Map<String, dynamic> category) {
+  Widget _buildCategoryItem(Map<String, dynamic> category) {
     final IconData categoryIcon = getCategoryIcon(category['name']);
-    final Color iconColor = Theme.of(context).primaryColor;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Card(
-        elevation: 1,
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           onTap: () {
             Navigator.push(
               context,
@@ -122,35 +100,50 @@ class _RssPageState extends State<RSS> {
               ),
             );
           },
-          child: Container(
-            height: 80, // 固定高度
-            padding: EdgeInsets.symmetric(horizontal: 12),
+          child: Padding(
+            padding: EdgeInsets.all(16),
             child: Row(
               children: [
                 Container(
-                  padding: EdgeInsets.all(6),
+                  padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     categoryIcon,
-                    size: 20,
-                    color: iconColor,
+                    size: 28, // 增大图标
+                    color: Theme.of(context).primaryColor,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: 16),
                 Expanded(
-                  child: Text(
-                    category['name'],
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        category['name'],
+                        style: TextStyle(
+                          fontSize: 18, // 增大分类名称字体
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Tap to view sources', // 添加提示文本
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 20,
+                  color: Colors.grey[400],
                 ),
               ],
             ),
