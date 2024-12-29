@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:lazyreader/models/CustomUser.dart';
 import 'package:lazyreader/pages/mine/index.dart';
@@ -107,11 +108,6 @@ class _HomePageState extends State<HomePage>
   ];
 
   @override
-/*************  ✨ Codeium Command ⭐  *************/
-  /// Initializes the state for the home page by loading user data and mock data,
-  /// and sets up the animation controller and tween animation for arrow animations.
-
-/******  0762e9fc-68cf-4aa9-b9b7-2709af844c57  *******/
   void initState() {
     super.initState();
     _loadUserData();
@@ -781,61 +777,6 @@ class _HomePageState extends State<HomePage>
                   ),
                 ],
               ),
-              SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.local_fire_department,
-                    size: 14,
-                    color: Colors.redAccent,
-                  ),
-                  SizedBox(width: 4),
-                  Text(
-                    _formatHeat(topic['hot_value']),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.black54,
-                    ),
-                  ),
-                  Spacer(),
-                  Text(
-                    'Trending on:',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.black45,
-                    ),
-                  ),
-                  SizedBox(width: 4),
-                ],
-              ),
-              SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: platforms
-                    .map((platform) => Container(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _getPlatformColor(platform).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color:
-                                  _getPlatformColor(platform).withOpacity(0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            platform,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: _getPlatformColor(platform),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ))
-                    .toList(),
-              ),
               if (topic['description'] != null) ...[
                 SizedBox(height: 8),
                 Text(
@@ -846,6 +787,20 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
               ],
+              SizedBox(height: 8),
+              Row(
+                children: platforms.map((platform) {
+                  return Padding(
+                    padding: EdgeInsets.only(right: 12),
+                    child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: Text(
+                          '${platform}',
+                        )),
+                  );
+                }).toList(),
+              ),
             ],
           ),
         ),
@@ -887,18 +842,5 @@ class _HomePageState extends State<HomePage>
       default:
         return Colors.grey.shade400;
     }
-  }
-
-  String _formatHeat(dynamic heat) {
-    if (heat == null) return '0';
-    num value = heat is num ? heat : num.tryParse(heat.toString()) ?? 0;
-    if (value >= 100000000) {
-      return '${(value / 100000000).toStringAsFixed(1)}B';
-    } else if (value >= 1000000) {
-      return '${(value / 1000000).toStringAsFixed(1)}M';
-    } else if (value >= 1000) {
-      return '${(value / 1000).toStringAsFixed(1)}K';
-    }
-    return value.toString();
   }
 }
