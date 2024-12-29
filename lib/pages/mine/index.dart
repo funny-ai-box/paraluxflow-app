@@ -28,6 +28,7 @@ enum Language {
   Arabic
 }
 
+// Language name getter remains the same...
 String getLanguageName(Language language) {
   switch (language) {
     case Language.English:
@@ -83,8 +84,8 @@ class MineMainPage extends StatefulWidget {
 class _MineMainPageState extends State<MineMainPage> {
   bool isPrivateProfile = false;
   bool isNotificationsOn = true;
-  DisplayMode displayMode = DisplayMode.light; // 默认为 light
-  Language currentLanguage = Language.English; // Default to English
+  DisplayMode displayMode = DisplayMode.light;
+  Language currentLanguage = Language.English;
 
   void _changeDisplayMode(DisplayMode mode) {
     setState(() {
@@ -95,119 +96,233 @@ class _MineMainPageState extends State<MineMainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        elevation: 0,
         backgroundColor: Colors.white,
-        body: SafeArea(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: <Widget>[
-              UserHeader(),
-
-              SizedBox(
-                height: 20,
-              ),
-              SettingSection(
-                title: 'General',
-                tiles: [
-                  SettingTile.switchTile(
-                    title: 'Notifications',
-                    value: isNotificationsOn,
-                    onChanged: (bool val) {
-                      setState(() {
-                        isNotificationsOn = val;
-                      });
-                    },
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: Colors.black87),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          'Settings',
+          style: TextStyle(
+            color: Colors.black87,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: UserHeader(),
+          ),
+          SliverToBoxAdapter(
+            child: Container(
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: Offset(0, 2),
                   ),
-                  SettingTile(
-                    title: 'Display Mode',
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Text(
-                          displayMode.toString().split('.').last,
-                          style: TextStyle(
-                            fontSize: 16,
-                          ),
-                        ), // 显示当前选择的显示模式
-                        Icon(Icons.chevron_right), // 提供一个指示符，表明可以点击
-                      ],
+                ],
+              ),
+              child: Column(
+                children: [
+                  _buildSettingItem(
+                    icon: Icons.notifications_outlined,
+                    title: 'Notifications',
+                    trailing: CupertinoSwitch(
+                      value: isNotificationsOn,
+                      onChanged: (val) {
+                        setState(() => isNotificationsOn = val);
+                      },
                     ),
+                  ),
+                  _buildDivider(),
+                  _buildSettingItem(
+                    icon: Icons.brightness_4_outlined,
+                    title: 'Display Mode',
+                    subtitle: displayMode.toString().split('.').last,
                     onTap: showDisplayModeBottomSheet,
                   ),
-                  SettingTile(
-                    title: 'Local Language',
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Text(
-                          getLanguageName(
-                              currentLanguage), // Display the selected language in its own language
-                          style: TextStyle(
-                            fontSize: 16,
-                          ),
-                        ),
-                        Icon(Icons
-                            .chevron_right), // Indicator to show that it can be expanded
-                      ],
-                    ),
+                  _buildDivider(),
+                  _buildSettingItem(
+                    icon: Icons.language_outlined,
+                    title: 'Language',
+                    subtitle: getLanguageName(currentLanguage),
                     onTap: showLanguageSelectionBottomSheet,
                   ),
                 ],
               ),
-              // SettingSection(
-              //   title: 'Account',
-              //   tiles: [
-              //     SettingTile(
-              //       title: 'Privacy',
-              //       onTap: () {/* Navigate to privacy settings */},
-              //     ),
-              //     SettingTile(
-              //       title: 'Security',
-              //       onTap: () {/* Navigate to security settings */},
-              //     ),
-              //   ],
-              // ),
-              SizedBox(
-                height: 20,
-              ),
-              SettingSection(
-                title: 'Support',
-                tiles: [
-                  SettingTile(
-                    title: 'Terms & Conditions',
-                    onTap: () {/* Navigate to terms & conditions */},
-                  ),
-                  SettingTile(
-                    title: 'Contact',
-                    onTap: () {/* Navigate to contact */},
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Container(
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: Offset(0, 2),
                   ),
                 ],
               ),
-              SettingTile(
-                title: 'Logout',
-                onTap: () {/* Handle logout */},
+              child: Column(
+                children: [
+                  _buildSettingItem(
+                    icon: Icons.description_outlined,
+                    title: 'Terms & Conditions',
+                    onTap: () {},
+                  ),
+                  _buildDivider(),
+                  _buildSettingItem(
+                    icon: Icons.support_outlined,
+                    title: 'Contact Support',
+                    onTap: () {},
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ));
+          SliverToBoxAdapter(
+            child: Container(
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: ElevatedButton(
+                onPressed: () {/* Handle logout */},
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  backgroundColor: Colors.red[50],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: Text(
+                  'Logout',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
+  Widget _buildSettingItem({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, size: 24, color: Colors.black54),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            trailing ?? Icon(Icons.chevron_right, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      indent: 56,
+      endIndent: 16,
+      color: Colors.grey[200],
+    );
+  }
+
+  // Bottom sheet methods remain the same but with updated styling
   void showLanguageSelectionBottomSheet() {
     showBarModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (BuildContext context) {
         return SafeArea(
-          child: ListView(
-            children: Language.values
-                .map((lang) => ListTile(
-                      title: Text(getLanguageName(lang)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'Select Language',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Divider(height: 1),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: Language.values.length,
+                  itemBuilder: (context, index) {
+                    final lang = Language.values[index];
+                    return ListTile(
+                      title: Text(
+                        getLanguageName(lang),
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      trailing: currentLanguage == lang
+                          ? Icon(Icons.check, color: Colors.blue)
+                          : null,
                       onTap: () {
-                        setState(() {
-                          currentLanguage = lang;
-                        });
+                        setState(() => currentLanguage = lang);
                         Navigator.pop(context);
                       },
-                    ))
-                .toList(),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -217,30 +332,54 @@ class _MineMainPageState extends State<MineMainPage> {
   void showDisplayModeBottomSheet() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (BuildContext context) {
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'Display Mode',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Divider(height: 1),
               ListTile(
-                leading: Icon(Icons.brightness_4),
+                leading: Icon(Icons.brightness_5_outlined),
                 title: Text('Light'),
+                trailing: displayMode == DisplayMode.light
+                    ? Icon(Icons.check, color: Colors.blue)
+                    : null,
                 onTap: () {
                   _changeDisplayMode(DisplayMode.light);
                   Navigator.pop(context);
                 },
               ),
               ListTile(
-                leading: Icon(Icons.brightness_2),
+                leading: Icon(Icons.brightness_2_outlined),
                 title: Text('Dark'),
+                trailing: displayMode == DisplayMode.dark
+                    ? Icon(Icons.check, color: Colors.blue)
+                    : null,
                 onTap: () {
                   _changeDisplayMode(DisplayMode.dark);
                   Navigator.pop(context);
                 },
               ),
               ListTile(
-                leading: Icon(Icons.phone_android),
+                leading: Icon(Icons.brightness_4_outlined),
                 title: Text('System Default'),
+                trailing: displayMode == DisplayMode.system
+                    ? Icon(Icons.check, color: Colors.blue)
+                    : null,
                 onTap: () {
                   _changeDisplayMode(DisplayMode.system);
                   Navigator.pop(context);
@@ -261,125 +400,84 @@ class UserHeader extends StatefulWidget {
 
 class _UserHeaderState extends State<UserHeader> {
   Future<CustomUser?>? userInfoFuture;
+
   @override
   void initState() {
     super.initState();
-    // 获取用户信息
     userInfoFuture = CustomUser.getFromLocalStorage();
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-        padding: EdgeInsets.all(10),
-        child: FutureBuilder<CustomUser?>(
-          future: userInfoFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasData) {
-                return LayoutBuilder(
-                  builder: (context, constraints) => Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30, // Adjust the size of the avatar
-                        backgroundImage: AssetImage('assets/tony.png'),
+      margin: EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: FutureBuilder<CustomUser?>(
+        future: userInfoFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasData) {
+            return Row(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
                       ),
-                      SizedBox(width: 16), // Space between avatar and text
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(snapshot.data!.displayName!,
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold)), // 显示用户名
-                            Text(snapshot.data!.email!,
-                                style: TextStyle(fontSize: 16)), // 显示邮箱
-                          ],
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 30,
+                    backgroundImage: AssetImage('assets/tony.png'),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        snapshot.data!.displayName!,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        snapshot.data!.email!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
                         ),
                       ),
                     ],
                   ),
-                );
-              } else if (snapshot.hasError) {
-                // 处理错误
-                return Text("Error: ${snapshot.error}");
-              }
-            }
-            // 数据加载中的占位符
-            return CircularProgressIndicator();
-          },
-        ));
-  }
-}
-
-class SettingSection extends StatelessWidget {
-  final String title;
-  final List<Widget> tiles;
-
-  SettingSection({required this.title, required this.tiles});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Text(
-            title,
-            style: TextStyle(
-              fontSize: 20.0,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        ...tiles
-            .map((tile) => Padding(
-                  padding: EdgeInsets.only(bottom: 0.0), // 减少底部间距
-                  child: tile,
-                ))
-            .toList(),
-      ],
-    );
-  }
-}
-
-class SettingTile extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final Widget? trailing;
-  final Function()? onTap;
-
-  SettingTile({required this.title, this.subtitle, this.trailing, this.onTap});
-
-  SettingTile.switchTile({
-    required String title,
-    required bool value,
-    required Function(bool) onChanged,
-  }) : this(
-          title: title,
-          trailing: CupertinoSwitch(
-            value: value,
-            onChanged: onChanged,
-          ),
-        );
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 1.0), // 减少上下间距
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(
-            horizontal: 16.0, vertical: 0), // 调整 ListTile 内部的填充，可根据需要调整
-        title: Text(
-          title,
-          style: TextStyle(fontSize: 16),
-        ),
-        subtitle: subtitle != null ? Text(subtitle!) : null,
-        trailing: trailing ?? Icon(Icons.chevron_right),
-        onTap: onTap,
+                ),
+                IconButton(
+                  icon: Icon(Icons.edit_outlined),
+                  onPressed: () {/* Handle edit profile */},
+                ),
+              ],
+            );
+          }
+          return Center(child: CircularProgressIndicator());
+        },
       ),
     );
   }
