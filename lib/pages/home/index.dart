@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:lazyreader/models/CustomUser.dart';
 import 'package:lazyreader/pages/mine/index.dart';
@@ -36,7 +35,7 @@ class _HomePageState extends State<HomePage>
 
   // AI Summary mock data
   final Map<String, dynamic> aiSummary = {
-    "title": "Today's AI Summary",
+    "title": "Your Intrests",
     "summary":
         "Today's hot topics primarily revolve around technology innovation, social issues, and entertainment. The most discussed topics include AI development, environmental protection, and trending social media events.",
     "insights": [
@@ -47,65 +46,27 @@ class _HomePageState extends State<HomePage>
     "date": DateTime.now(),
   };
 
-  // Mock topics data
-  final List<Map<String, dynamic>> mockTopics = [
-    {
-      "title": "OpenAI Announces GPT-5 Development",
-      "platforms": ["Weibo", "Zhihu"],
-      "hot_value": 8750000,
-      "link": "https://example.com/1",
-      "description": "Latest breakthrough in AI technology development",
-    },
-    {
-      "title": "New Environmental Protection Policy Released",
-      "platforms": ["Toutiao", "Baidu"],
-      "hot_value": 6520000,
-      "link": "https://example.com/2",
-      "description": "Government announces new green initiatives",
-    },
-    {
-      "title": "Global Technology Conference 2024",
-      "platforms": ["Zhihu", "Douyin", "Weibo"],
-      "hot_value": 5430000,
-      "link": "https://example.com/3",
-      "description": "Major tech companies reveal future plans",
-    },
-    {
-      "title": "Viral Social Media Challenge Trends",
-      "platforms": ["Douyin", "Weibo"],
-      "hot_value": 4820000,
-      "link": "https://example.com/4",
-      "description": "New dance challenge goes viral",
-    },
-    {
-      "title": "Space Exploration Breakthrough",
-      "platforms": ["Zhihu", "Toutiao"],
-      "hot_value": 3950000,
-      "link": "https://example.com/5",
-      "description": "Scientists discover new exoplanet",
-    },
-    {
-      "title": "Digital Currency Innovation",
-      "platforms": ["Baidu", "Zhihu"],
-      "hot_value": 2840000,
-      "link": "https://example.com/6",
-      "description": "New developments in cryptocurrency",
-    },
-    {
-      "title": "Healthcare Technology Innovation",
-      "platforms": ["Toutiao", "Zhihu", "Baidu"],
-      "hot_value": 2350000,
-      "link": "https://example.com/7",
-      "description": "AI applications in medical diagnosis",
-    },
-    {
-      "title": "Educational Reform Initiative",
-      "platforms": ["Weibo", "Toutiao"],
-      "hot_value": 1980000,
-      "link": "https://example.com/8",
-      "description": "New policies in education system",
-    },
-  ];
+  Future<void> _loadTopicsData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await _hottopicService.getConsolidatedHotTopics();
+      if (response['code'] == 200 && response['data'] != null) {
+        setState(() {
+          allTopics =
+              List<Map<String, dynamic>>.from(response['data']['topics']);
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading topics: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -142,7 +103,7 @@ class _HomePageState extends State<HomePage>
 
   void _loadMockData() {
     setState(() {
-      allTopics = mockTopics;
+      _loadTopicsData();
       isLoading = false;
     });
   }
@@ -364,6 +325,136 @@ class _HomePageState extends State<HomePage>
                 ),
               ),
             ),
+    );
+  }
+
+  void _showPlatformsBottomSheet(List<Map<String, dynamic>> platforms) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                itemCount: platforms.length,
+                itemBuilder: (context, index) {
+                  final platform = platforms[index];
+                  return InkWell(
+                    onTap: () => _handlePlatformTap(platform['link']),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Colors.grey.withOpacity(0.1),
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          _buildPlatformIcon(platform['platform']),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  platform['title'],
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '热度: ${platform['hot_value'] ?? "未知"}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlatformIcon(String platform) {
+    final IconData icon;
+    final Color color;
+
+    switch (platform.toLowerCase()) {
+      case 'weibo':
+        icon = Icons.whatshot;
+        color = Colors.red;
+        break;
+      case 'zhihu':
+        icon = Icons.question_answer;
+        color = Colors.blue;
+        break;
+      case 'douyin':
+        icon = Icons.music_note;
+        color = Colors.pink;
+        break;
+      case 'baidu':
+        icon = Icons.search;
+        color = Colors.blue[700]!;
+        break;
+      case 'toutiao':
+        icon = Icons.article;
+        color = Colors.red[700]!;
+        break;
+      default:
+        icon = Icons.public;
+        color = Colors.grey;
+    }
+
+    return Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(icon, size: 20, color: color),
     );
   }
 
@@ -723,43 +814,51 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildTopicItem(Map<String, dynamic> topic, int index) {
-    List<String> platforms = List<String>.from(topic['platforms']);
+    // Get platforms and deduplicate based on platform name only
+    final platforms = List<Map<String, dynamic>>.from(topic['platforms']);
+    final uniquePlatforms = _getUniquePlatforms(platforms);
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 6,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 4),
           ),
         ],
       ),
       child: InkWell(
-        onTap: () => _handleTopicTap(topic['link']),
-        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          if (platforms.length > 1) {
+            _showPlatformsBottomSheet(platforms);
+          } else if (platforms.isNotEmpty) {
+            _handlePlatformTap(platforms.first['link']);
+          }
+        },
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: EdgeInsets.all(12),
+          padding: EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 24,
-                    height: 24,
-                    alignment: Alignment.center,
+                    width: 28,
+                    height: 28,
                     decoration: BoxDecoration(
                       color: _getRankingColor(index),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    alignment: Alignment.center,
                     child: Text(
                       '${index + 1}',
                       style: TextStyle(
-                        fontSize: 14,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -768,39 +867,50 @@ class _HomePageState extends State<HomePage>
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      topic['title'] ?? '',
+                      topic['title'],
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
                       ),
                     ),
                   ),
                 ],
               ),
-              if (topic['description'] != null) ...[
-                SizedBox(height: 8),
-                Text(
-                  topic['description'],
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black54,
-                  ),
+              if (uniquePlatforms.isNotEmpty) ...[
+                SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: uniquePlatforms.map((platform) {
+                    final hasHotValue = platform['hot_value'] != null &&
+                        platform['hot_value'].toString().isNotEmpty &&
+                        platform['hot_value'] != '未知热度';
+
+                    return Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildPlatformIcon(platform['platform']),
+                          SizedBox(width: 4),
+                          Text(
+                            hasHotValue ? platform['hot_value'] : '',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
                 ),
               ],
-              SizedBox(height: 8),
-              Row(
-                children: platforms.map((platform) {
-                  return Padding(
-                    padding: EdgeInsets.only(right: 12),
-                    child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: Text(
-                          '${platform}',
-                        )),
-                  );
-                }).toList(),
-              ),
             ],
           ),
         ),
@@ -808,25 +918,30 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Color _getPlatformColor(String platform) {
-    switch (platform) {
-      case 'Weibo':
-        return Colors.red;
-      case 'Zhihu':
-        return Colors.blue;
-      case 'Douyin':
-        return Colors.purple;
-      case 'Baidu':
-        return Colors.blue.shade700;
-      case 'Toutiao':
-        return Colors.orange;
-      default:
-        return Colors.grey;
+  List<Map<String, dynamic>> _getUniquePlatforms(
+      List<Map<String, dynamic>> platforms) {
+    final uniquePlatforms = <String, Map<String, dynamic>>{};
+
+    for (var platform in platforms) {
+      final platformName = platform['platform'];
+      if (!uniquePlatforms.containsKey(platformName)) {
+        // For each platform, keep the first occurrence with a valid hot_value (if any)
+        final hasValidHotValue = platform['hot_value'] != null &&
+            platform['hot_value'].toString().isNotEmpty &&
+            platform['hot_value'] != '未知热度';
+
+        if (hasValidHotValue || !uniquePlatforms.containsKey(platformName)) {
+          uniquePlatforms[platformName] = platform;
+        }
+      }
     }
+
+    return uniquePlatforms.values.toList();
   }
 
-  void _handleTopicTap(String? url) {
-    if (url != null && url.isNotEmpty) {
+  void _handlePlatformTap(String? url) {
+    if (url != null && url.isNotEmpty && url != 'javascript:void(0);') {
+      // 实现跳转逻辑
       print('Navigate to: $url');
     }
   }
