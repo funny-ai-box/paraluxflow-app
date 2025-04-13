@@ -1,3 +1,4 @@
+// lib/pages/user/login.dart
 import 'dart:io';
 
 import 'package:lazyreader/models/CustomUser.dart';
@@ -5,12 +6,12 @@ import 'package:lazyreader/pages/home_screen.dart';
 import 'package:lazyreader/pages/user/email_login.dart';
 import 'package:lazyreader/service/user_service.dart';
 import 'package:lazyreader/utils/loading_overlay.dart';
+import 'package:lazyreader/utils/local_storage_util.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart'; // 如果需要SVG图标，需添加flutter_svg包
+import 'package:flutter_svg/svg.dart';
 import 'package:lazyreader/service/auth_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-
 import 'package:url_launcher/url_launcher.dart';
 
 class LoginPage extends StatefulWidget {
@@ -36,7 +37,6 @@ class _LoginPageState extends State<LoginPage> {
     String version = packageInfo.version;
     String buildNumber = packageInfo.buildNumber;
 
-    // 使用这些信息
     print("应用名称: $appName");
     print("包名/Bundle ID: $packageName");
     print("版本: $version");
@@ -44,8 +44,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _onAppleLoginPressed() async {
-    // 模拟登录逻辑
-
     try {
       AuthService authService = AuthService();
       UserService userService = UserService();
@@ -57,16 +55,19 @@ class _LoginPageState extends State<LoginPage> {
 
         var response = await userService.loginByToken(idToken!);
 
-        print(response);
-        // 根据response的结果进行处理
         if (response["code"] == 200) {
-          print(user);
+          // 保存用户数据
           CustomUser customUser = CustomUser(
               uid: user.uid,
               email: user.email,
               displayName: user.displayName,
               photoURL: user.photoURL);
-          customUser.setToLocalStorage();
+          await customUser.setToLocalStorage();
+          
+          // 保存token
+          await LocalStorageUtil.setString('token', response['data']['token']);
+          
+          // 跳转到首页
           Future.delayed(const Duration(seconds: 1), () {
             Navigator.of(context).pushReplacement(MaterialPageRoute(
                 builder: (context) => const HomeScreenPage()));
@@ -74,12 +75,13 @@ class _LoginPageState extends State<LoginPage> {
         } else {
           // 登录失败，显示错误提示
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('登录失败: $response'),
+              content: Text('登录失败: ${response["message"]}'),
               behavior: SnackBarBehavior.floating));
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('获取用户信息失败'), behavior: SnackBarBehavior.floating));
+            content: Text('获取用户信息失败'), 
+            behavior: SnackBarBehavior.floating));
       }
     } catch (e) {
       print(e);
@@ -91,7 +93,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _onGoogleLoginPressed() async {
-    // 模拟登录逻辑
     try {
       AuthService authService = AuthService();
       UserService userService = UserService();
@@ -103,16 +104,19 @@ class _LoginPageState extends State<LoginPage> {
 
         var response = await userService.loginByToken(idToken!);
 
-        print(response);
-        // 根据response的结果进行处理
         if (response["code"] == 200) {
-          print(user);
+          // 保存用户数据
           CustomUser customUser = CustomUser(
               uid: user.uid,
               email: user.email,
               displayName: user.displayName,
               photoURL: user.photoURL);
-          customUser.setToLocalStorage();
+          await customUser.setToLocalStorage();
+          
+          // 保存token
+          await LocalStorageUtil.setString('token', response['data']['token']);
+          
+          // 跳转到首页
           Future.delayed(const Duration(seconds: 1), () {
             Navigator.of(context).pushReplacement(MaterialPageRoute(
                 builder: (context) => const HomeScreenPage()));
@@ -120,12 +124,13 @@ class _LoginPageState extends State<LoginPage> {
         } else {
           // 登录失败，显示错误提示
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('登录失败: $response'),
+              content: Text('登录失败: ${response["message"]}'),
               behavior: SnackBarBehavior.floating));
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('获取用户信息失败'), behavior: SnackBarBehavior.floating));
+            content: Text('获取用户信息失败'), 
+            behavior: SnackBarBehavior.floating));
       }
     } catch (e) {
       print(e);
@@ -140,40 +145,39 @@ class _LoginPageState extends State<LoginPage> {
     List<Widget> buttons = [
       SizedBox(
         width: double.infinity,
-        height: 50, // Adjust the height as needed
+        height: 50,
         child: _buildSocialButton(context,
             assetName: 'assets/google_icon.svg',
-            text: 'Continue With Google',
+            text: '使用Google账号登录',
             onPressed: _onGoogleLoginPressed,
             backgroundColor: Colors.indigo),
       ),
 
-      const SizedBox(height: 16), // Spacer between buttons
+      const SizedBox(height: 16),
       SizedBox(
         width: double.infinity,
-        height: 50, // Adjust the height as needed
+        height: 50,
         child: _buildSocialButton(context,
             assetName: 'assets/email_icon.svg',
-            text: 'Continue With Email',
+            text: '使用邮箱登录',
             onPressed: _onEmailLoginPressed,
             backgroundColor: Colors.indigo),
       ),
     ];
 
-    // Check if the platform is iOS and add the Apple sign-in button
+    // 检查是否在iOS平台并添加Apple登录按钮
     if (Platform.isIOS) {
       buttons.insertAll(0, [
-        // Spacer between buttons
         SizedBox(
           width: double.infinity,
-          height: 50, // Adjust the height as needed
+          height: 50,
           child: _buildSocialButton(context,
               assetName:
-                  'assets/apple_icon.svg', // Ensure you have an Apple icon asset
-              text: 'Continue With Apple',
+                  'assets/apple_icon.svg',
+              text: '使用Apple账号登录',
               onPressed: _onAppleLoginPressed,
               backgroundColor: Colors
-                  .black), // Apple's brand guidelines suggest using a black background for the button
+                  .black),
         ),
         const SizedBox(height: 16),
       ]);
@@ -201,7 +205,6 @@ class _LoginPageState extends State<LoginPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Logo Placeholder
                           SizedBox(
                               height: MediaQuery.of(context).size.height * 0.1),
                           Container(
@@ -214,7 +217,7 @@ class _LoginPageState extends State<LoginPage> {
                                     height: 60),
                                 const SizedBox(height: 20),
                                 const Text(
-                                  "Welcome",
+                                  "欢迎使用",
                                   style: TextStyle(
                                       fontSize: 26,
                                       fontWeight: FontWeight.bold,
@@ -224,7 +227,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const Text(
-                            "Now, you can easily stay updated with the latest news. Designed for convenience and speed, it brings the world's current events right to your fingertips",
+                            "现在，您可以轻松获取最新资讯。专为便捷和速度而设计，将全球当前事件直接呈现在您的指尖",
                             style: TextStyle(
                                 fontSize: 14,
                                 color: Color.fromARGB(221, 56, 56, 56)),
@@ -245,9 +248,9 @@ class _LoginPageState extends State<LoginPage> {
                           const TextStyle(fontSize: 12, color: Colors.black54),
                       children: <TextSpan>[
                         const TextSpan(
-                            text: "By using this service, you agree to our "),
+                            text: "使用本服务即表示您同意我们的"),
                         TextSpan(
-                          text: 'Terms of Use',
+                          text: '使用条款',
                           style: TextStyle(
                             color: Theme.of(context).primaryColor,
                             decoration: TextDecoration.underline,
@@ -256,14 +259,16 @@ class _LoginPageState extends State<LoginPage> {
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
                               launchUrl(
-                                Uri.parse("https://www.google.com"),
+                                Uri.parse("https://www.example.com/terms"),
                                 mode: LaunchMode.inAppWebView,
                               );
                             },
                         ),
-                        const TextSpan(text: " and "),
+                        const TextSpan(
+                          text: "和",
+                        ),
                         TextSpan(
-                          text: 'Privacy Policy',
+                          text: '隐私政策',
                           style: TextStyle(
                             color: Theme.of(context).primaryColor,
                             decoration: TextDecoration.underline,
@@ -271,7 +276,10 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
-                              // TODO: Add navigation to Privacy Policy link
+                              launchUrl(
+                                Uri.parse("https://www.example.com/privacy"),
+                                mode: LaunchMode.inAppWebView,
+                              );
                             },
                         ),
                       ],
@@ -300,7 +308,7 @@ class _LoginPageState extends State<LoginPage> {
       style: ElevatedButton.styleFrom(
         textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
         foregroundColor: Colors.black87,
-        minimumSize: const Size(double.infinity, 50), // Button height
+        minimumSize: const Size(double.infinity, 50),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),

@@ -1,3 +1,4 @@
+// lib/utils/http_util.dart
 import 'dart:async';
 
 import 'package:fluttertoast/fluttertoast.dart';
@@ -6,10 +7,11 @@ import 'dart:convert';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:lazyreader/models/CustomUser.dart';
 import 'package:lazyreader/utils/event_bus_util.dart';
+import 'package:lazyreader/utils/local_storage_util.dart';
 import 'package:path_provider/path_provider.dart';
 
 class HttpUtil {
-  //static const String _baseUrl = 'https://jdai.ezretailpro.com';
+  // static const String _baseUrl = 'https://jdai.ezretailpro.com';
   // static const String _baseUrl = 'http://192.168.31.102:8002';
   static const String _baseUrl = 'http://127.0.0.1:8000';
   static late PersistCookieJar _cookieJar;
@@ -25,63 +27,50 @@ class HttpUtil {
     var url = path.contains('http')
         ? Uri.parse('$path')
         : Uri.parse('$_baseUrl/$path');
-    print('url=${url}');
+    print('请求URL: $url');
 
     try {
-      // 加载对应请求的cookie
-      final cookies = await _cookieJar.loadForRequest(url);
-      final cookieHeader =
-          cookies.map((cookie) => '${cookie.name}=${cookie.value}').join('; ');
-      print("______-cookieHeader:$cookieHeader");
+      // 获取JWT令牌
+      final token = await LocalStorageUtil.getString('token');
+      
+      // 准备请求头
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+      };
+      
+      // 如果有token，添加到请求头
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
       http.Response response;
       if (method == 'GET') {
         final queryParameters =
             parameters?.map((key, value) => MapEntry(key, value.toString()));
-        // url = Uri.parse('$_baseUrl/$path')
+        
         url = path.contains('http')
             ? Uri.parse('$path')
             : Uri.parse('$_baseUrl/$path')
                 .replace(queryParameters: queryParameters);
-        print("url-----$url");
-        response = await http.get(
-          url,
-          headers: cookieHeader.isNotEmpty
-              ? {'Cookie': cookieHeader, 'ismock': 'true'}
-              : {},
-        );
-        print("response-----$response");
+        
+        print("完整URL: $url");
+        response = await http.get(url, headers: headers);
+        
       } else if (method == 'POST') {
-        response =
-            await http.post(url, body: json.encode(parameters), headers: {
-          'ismock': 'true',
-          'Content-Type': 'application/json',
-          if (cookieHeader.isNotEmpty) 'Cookie': cookieHeader,
-        });
+        response = await http.post(
+          url, 
+          body: json.encode(parameters), 
+          headers: headers
+        );
       } else {
-        throw Exception('Unsupported HTTP method: $method');
-      }
-      var c = response.headers['set-cookie'];
-
-      if (c != null) {
-        // 使用正则表达式匹配cookie分隔符，避免破坏日期
-        var cookiePattern = RegExp(r'(?<=\),|\)$)');
-        var cookies = c.split(cookiePattern);
-        for (var cookie in cookies) {
-          print("Cookie: $cookie");
-        }
-
-        // 保存处理后的cookies
-        _cookieJar.saveFromResponse(
-            Uri.parse(_baseUrl),
-            cookies
-                .map((str) => Cookie.fromSetCookieValue(str.trim()))
-                .toList());
+        throw Exception('不支持的HTTP方法: $method');
       }
 
       return _processResponse(response);
     } catch (e) {
-      print("error: $e");
+      print("请求错误: $e");
       Fluttertoast.showToast(msg: '网络请求失败: $e');
+      throw e;
     }
   }
 
@@ -90,17 +79,20 @@ class HttpUtil {
         ? Uri.parse('$path')
         : Uri.parse('$_baseUrl/$path');
     try {
-      final cookies = await _cookieJar.loadForRequest(url);
-      final cookieHeader =
-          cookies.map((cookie) => '${cookie.name}=${cookie.value}').join('; ');
-      print("______-cookieHeader:$cookieHeader");
+      // 获取JWT令牌
+      final token = await LocalStorageUtil.getString('token');
+      final headers = <String, String>{};
+      
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+      
       final client = http.Client();
       final request = http.Request('GET', url)
-        ..headers['Cookie'] = cookieHeader; // Adding cookie header
+        ..headers.addAll(headers);
 
       final response = await client.send(request);
-      print("--------------");
-      print(response.headers);
+      print("SSE响应头: ${response.headers}");
 
       if (response.headers.containsKey('content-type') &&
           response.headers['content-type']!.startsWith('text/event-stream')) {
@@ -120,32 +112,52 @@ class HttpUtil {
 
         yield* controller.stream;
       } else {
-        throw Exception('Server sent event not supported by server');
+        throw Exception('服务器不支持Server-Sent Events');
       }
     } catch (e) {
-      print("SSE error: $e");
+      print("SSE错误: $e");
       Fluttertoast.showToast(msg: 'SSE请求失败: $e');
+      throw e;
     }
   }
 
   static dynamic _processResponse(http.Response response) {
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      final jsonResponse = json.decode(response.body);
+      
+      // 检查API返回的状态码
+      if (jsonResponse['code'] != 200) {
+        // 状态码不为200，表示业务逻辑错误
+        if (jsonResponse['code'] == 20001 || 
+            jsonResponse['code'] == 20002 || 
+            jsonResponse['code'] == 20003) {
+          // 认证失败、令牌过期、无效令牌
+          _handleNotLoggedIn();
+        }
+        throw Exception(jsonResponse['message'] ?? '服务器错误');
+      }
+      
+      // 返回数据
+      return jsonResponse;
     } else if (response.statusCode == 401) {
-      // 删除本地存储的用户信息并跳转到登录页面
+      // 身份验证失败
       _handleNotLoggedIn();
+      throw Exception('未授权，请重新登录');
     } else {
-      throw Exception('The network is busy, please try again later');
-      // throw Exception('Request failed with status: ${response.statusCode}.');
+      throw Exception('请求失败，状态码: ${response.statusCode}');
     }
   }
 
   static Future<void> _handleNotLoggedIn() async {
     // 删除本地存储的用户信息
     await CustomUser.removeFromLocalStorage();
+    await LocalStorageUtil.remove('token');
 
-    _cookieJar.delete(Uri.parse(_baseUrl));
-    print("提交登录事件");
+    // 删除所有Cookie
+    _cookieJar.deleteAll();
+    
+    // 发布用户未授权事件
+    print("发布登录失效事件");
     eventBus.fire(UserUnauthorizedEvent());
   }
 }

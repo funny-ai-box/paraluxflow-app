@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lazyreader/pages/articles/favorite_list.dart';
-import 'package:lazyreader/pages/home/index.dart';
-import 'package:lazyreader/pages/articles/list.dart';
-import 'package:lazyreader/pages/feed/index.dart';
 
 class HomeScreenPage extends StatefulWidget {
   const HomeScreenPage({Key? key}) : super(key: key);
@@ -14,10 +10,7 @@ class HomeScreenPage extends StatefulWidget {
 class _HomeScreenPageState extends State<HomeScreenPage>
     with SingleTickerProviderStateMixin {
   final List<Widget> _pages = [
-    HomePage(),
-    ArticleList(),
-    RSS(),
-    FavoritesRSSPage()
+  
   ];
 
   int _selectedIndex = 0;

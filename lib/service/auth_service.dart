@@ -1,7 +1,9 @@
+// lib/service/auth_service.dart
 import 'package:lazyreader/utils/local_storage_util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:lazyreader/utils/http_util.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -11,7 +13,6 @@ class AuthService {
     try {
       final GoogleSignInAccount? googleSignInAccount =
           await googleSignIn.signIn();
-      print("obj2ect-----$googleSignInAccount");
       if (googleSignInAccount != null) {
         final GoogleSignInAuthentication googleSignInAuthentication =
             await googleSignInAccount.authentication;
@@ -25,32 +26,35 @@ class AuthService {
         return user;
       }
     } catch (error) {
-      print("errorle---$error");
+      print("登录错误: $error");
       return null;
     }
     return null;
   }
 
   Future<User?> signInWithApple() async {
-    final appleCredential = await SignInWithApple.getAppleIDCredential(
-      scopes: [
-        AppleIDAuthorizationScopes.email,
-        AppleIDAuthorizationScopes.fullName,
-      ],
-    );
+    try {
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
 
-    final oAuthProvider = OAuthProvider('apple.com');
-    final credential = oAuthProvider.credential(
-      idToken: appleCredential.identityToken,
-      accessToken: appleCredential.authorizationCode,
-    );
+      final oAuthProvider = OAuthProvider('apple.com');
+      final credential = oAuthProvider.credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
 
-    // 使用Firebase Auth进行登录
-    final UserCredential authResult =
-        await _auth.signInWithCredential(credential);
-    final User? user = authResult.user;
-    print(user);
-    return user;
+      final UserCredential authResult =
+          await _auth.signInWithCredential(credential);
+      final User? user = authResult.user;
+      return user;
+    } catch (error) {
+      print("Apple登录错误: $error");
+      return null;
+    }
   }
 
   Future<bool> sendSignInLinkToEmail(String email) async {
@@ -69,40 +73,42 @@ class AuthService {
         actionCodeSettings: actionCodeSettings,
       );
 
-      print("send email了");
       await LocalStorageUtil.setString('emailForSignIn', email);
-
-      // 发送链接成功
       return true;
     } catch (error) {
-      // 打印错误信息
-      print('Failed to send verification link: $error');
-      // TODO: Handle errors (e.g., show error message)
-
-      // 抛出异常，包含错误信息
-      throw Exception('Failed to send verification link: $error');
+      print('发送验证链接失败: $error');
+      throw Exception('发送验证链接失败: $error');
     }
   }
 
   Future<User?> signInWithEmailLink(String email, String link) async {
-    if (FirebaseAuth.instance.isSignInWithEmailLink(link)) {
+    if (_auth.isSignInWithEmailLink(link)) {
       try {
-        // The client SDK will parse the code from the link for you.
         final userCredential =
             await _auth.signInWithEmailLink(email: email, emailLink: link);
-
-        // You can access the new user via userCredential.user.
-
         final User? user = userCredential.user;
-        print("uuuuuuuu");
         return user;
       } catch (error) {
-        print('Failed to sign in with email link: $error');
-        throw Exception('Failed to sign in with email link: $error');
+        print('邮箱链接登录失败: $error');
+        throw Exception('邮箱链接登录失败: $error');
       }
     } else {
-      print('Failed to sign in with email invalid');
-      throw Exception('verify email link is invalid');
+      throw Exception('邮箱验证链接无效');
+    }
+  }
+  
+  Future<void> logout() async {
+    try {
+      await HttpUtil.request('/api/client/v1/auth/logout', method: 'POST');
+      await _auth.signOut();
+      if (await googleSignIn.isSignedIn()) {
+        await googleSignIn.signOut();
+      }
+      await LocalStorageUtil.remove('customUser');
+      await LocalStorageUtil.remove('token');
+    } catch (e) {
+      print('登出失败: $e');
+      throw Exception('登出失败: $e');
     }
   }
 }
