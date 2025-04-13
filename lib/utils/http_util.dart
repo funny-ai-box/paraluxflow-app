@@ -13,7 +13,7 @@ import 'package:path_provider/path_provider.dart';
 class HttpUtil {
   // static const String _baseUrl = 'https://jdai.ezretailpro.com';
   // static const String _baseUrl = 'http://192.168.31.102:8002';
-  static const String _baseUrl = 'http://127.0.0.1:8000';
+  static const String _baseUrl = 'http://127.0.0.1:8000'; // 移除末尾的斜杠
   static late PersistCookieJar _cookieJar;
 
   // 初始化CookieJar
@@ -24,9 +24,12 @@ class HttpUtil {
 
   static Future<dynamic> request(String path,
       {String method = 'GET', Map<String, dynamic>? parameters}) async {
-    var url = path.contains('http')
-        ? Uri.parse('$path')
-        : Uri.parse('$_baseUrl/$path');
+    // 确保path不以斜杠开头，避免双斜杠问题
+    String normalizedPath = path.startsWith('/') ? path.substring(1) : path;
+    
+    var url = normalizedPath.contains('http')
+        ? Uri.parse('$normalizedPath')
+        : Uri.parse('$_baseUrl/$normalizedPath');
     print('请求URL: $url');
 
     try {
@@ -41,6 +44,9 @@ class HttpUtil {
       // 如果有token，添加到请求头
       if (token != null && token.isNotEmpty) {
         headers['Authorization'] = 'Bearer $token';
+        print("添加认证头: Bearer $token");
+      } else {
+        print("警告: 没有找到token");
       }
 
       http.Response response;
@@ -48,9 +54,9 @@ class HttpUtil {
         final queryParameters =
             parameters?.map((key, value) => MapEntry(key, value.toString()));
         
-        url = path.contains('http')
-            ? Uri.parse('$path')
-            : Uri.parse('$_baseUrl/$path')
+        url = normalizedPath.contains('http')
+            ? Uri.parse('$normalizedPath')
+            : Uri.parse('$_baseUrl/$normalizedPath')
                 .replace(queryParameters: queryParameters);
         
         print("完整URL: $url");
@@ -75,9 +81,12 @@ class HttpUtil {
   }
 
   static Stream<String> requestSSE(String path) async* {
-    var url = path.contains('http')
-        ? Uri.parse('$path')
-        : Uri.parse('$_baseUrl/$path');
+    // 确保path不以斜杠开头
+    String normalizedPath = path.startsWith('/') ? path.substring(1) : path;
+    
+    var url = normalizedPath.contains('http')
+        ? Uri.parse('$normalizedPath')
+        : Uri.parse('$_baseUrl/$normalizedPath');
     try {
       // 获取JWT令牌
       final token = await LocalStorageUtil.getString('token');
@@ -139,11 +148,13 @@ class HttpUtil {
       
       // 返回数据
       return jsonResponse;
-    } else if (response.statusCode == 401) {
+    } else if (response.statusCode == 401 || response.statusCode == 403) {
       // 身份验证失败
+      print("认证失败: ${response.statusCode} - ${response.body}");
       _handleNotLoggedIn();
       throw Exception('未授权，请重新登录');
     } else {
+      print("请求失败: ${response.statusCode} - ${response.body}");
       throw Exception('请求失败，状态码: ${response.statusCode}');
     }
   }

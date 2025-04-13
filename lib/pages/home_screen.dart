@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:lazyreader/pages/home/home_page.dart';
+import 'package:lazyreader/pages/articles/articles_page.dart';
+import 'package:lazyreader/pages/sources/sources_page.dart';
+import 'package:lazyreader/pages/favorites/favorites_page.dart';
+import 'package:lazyreader/pages/mine/index.dart';
 
 class HomeScreenPage extends StatefulWidget {
   const HomeScreenPage({Key? key}) : super(key: key);
@@ -9,8 +14,12 @@ class HomeScreenPage extends StatefulWidget {
 
 class _HomeScreenPageState extends State<HomeScreenPage>
     with SingleTickerProviderStateMixin {
+  // 初始化所有页面
   final List<Widget> _pages = [
-  
+    HomePage(),           // 首页 - 静态欢迎页面
+    ArticlesPage(),       // 文章列表页
+    SourcesPage(),        // 订阅源页面
+    FavoritesPage(),      // 收藏页面
   ];
 
   int _selectedIndex = 0;
@@ -52,6 +61,28 @@ class _HomeScreenPageState extends State<HomeScreenPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: _buildAppBarTitle(),
+        actions: [
+          if (_selectedIndex != 0) // 除了首页外，其他页面显示搜索按钮
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                // 搜索功能
+              },
+            ),
+          IconButton(
+            icon: Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MineMainPage()),
+              );
+            },
+          ),
+        ],
+        elevation: 0,
+      ),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: _pages[_selectedIndex],
@@ -75,27 +106,43 @@ class _HomeScreenPageState extends State<HomeScreenPage>
           BottomNavigationBarItem(
             icon: _buildIcon(Icons.home_outlined, _selectedIndex == 0),
             activeIcon: _buildIcon(Icons.home_rounded, _selectedIndex == 0),
-            label: 'Home',
+            label: '首页',
           ),
           BottomNavigationBarItem(
             icon: _buildIcon(Icons.article_outlined, _selectedIndex == 1),
             activeIcon: _buildIcon(Icons.article_rounded, _selectedIndex == 1),
-            label: 'Articles',
+            label: '文章',
           ),
           BottomNavigationBarItem(
-            icon: _buildIcon(Icons.stream_outlined, _selectedIndex == 2),
-            activeIcon: _buildIcon(Icons.stream_rounded, _selectedIndex == 2),
-            label: 'Sources',
+            icon: _buildIcon(Icons.rss_feed_outlined, _selectedIndex == 2),
+            activeIcon: _buildIcon(Icons.rss_feed_rounded, _selectedIndex == 2),
+            label: '订阅源',
           ),
           BottomNavigationBarItem(
             icon: _buildIcon(Icons.star_outline_rounded, _selectedIndex == 3),
             activeIcon: _buildIcon(Icons.star_rounded, _selectedIndex == 3),
-            label: 'Favorites',
+            label: '收藏',
           ),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
       ),
     );
+  }
+
+  // 根据当前选中的页面返回对应的标题
+  Widget _buildAppBarTitle() {
+    switch (_selectedIndex) {
+      case 0:
+        return Text('LazyReader');
+      case 1:
+        return Text('所有文章');
+      case 2:
+        return Text('订阅源');
+      case 3:
+        return Text('我的收藏');
+      default:
+        return Text('LazyReader');
+    }
   }
 }
