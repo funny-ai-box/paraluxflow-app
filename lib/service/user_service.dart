@@ -2,7 +2,7 @@ import 'package:lazyreader/utils/http_util.dart';
 
 class UserService {
   Future<dynamic> loginByToken(String idToken) async {
-    const path = 'user/login_by_token'; // 登录API的路径
+    const path = '/api/client/v1/auth/login_by_token'; // 登录API的路径
     final parameters = {
       'id_token': idToken,
     };
